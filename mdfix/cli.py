@@ -1,6 +1,8 @@
-import typer
 from pathlib import Path
 
+import typer
+
+from .scanner import scan_markdown_files
 from .version import __version__
 
 app = typer.Typer(
@@ -20,7 +22,23 @@ def scan(
     path: Path = typer.Argument(Path(".")),
 ):
     """Scan markdown files."""
-    print(f"Scanning {path}")
+
+    files = scan_markdown_files(path)
+
+    print(f"Scanning: {path}")
+    print()
+
+    if not files:
+        print("No markdown files found.")
+        return
+
+    print("Markdown files found:")
+
+    for file in files:
+        print(f"- {file.path} ({file.size} bytes)")
+
+    print()
+    print(f"Total: {len(files)} files")
 
 
 @app.callback(invoke_without_command=True)
