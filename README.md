@@ -110,19 +110,28 @@ pytest
 
 ## Project Structure
 
+```text
+
 mdfix/
+├── __init__.py
+├── __main__.py
 ├── cli.py
-├── models.py
 ├── document.py
 ├── elements.py
-├── scanner.py
+├── models.py
 ├── parser.py
+├── scanner.py
 └── version.py
+```
+
+```text
 
 tests/
-├── test_scanner.py
 ├── test_document.py
-└── test_parser.py
+├── test_elements.py
+├── test_parser.py
+└── test_scanner.py
+```
 
 ## Design Principles
 
