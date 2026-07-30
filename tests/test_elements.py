@@ -29,6 +29,7 @@ def test_paragraph():
 
     assert paragraph.text == "Hello"
     assert paragraph.position.line == 3
+    assert paragraph.position.column == 1
 
 
 def test_table():
@@ -49,21 +50,21 @@ def test_code_block():
     block = CodeBlock(
         language="python",
         code="print('Hello')",
-        position=SourcePosition(line=10),
+        position=SourcePosition(line=7),
     )
 
     assert block.language == "python"
     assert "print" in block.code
-    assert block.position.line == 10
+    assert block.position.line == 7
 
 
 def test_list():
     lst = List(
         ordered=False,
         items=["One", "Two"],
-        position=SourcePosition(line=15),
+        position=SourcePosition(line=10),
     )
 
     assert lst.ordered is False
     assert len(lst.items) == 2
-    assert lst.position.line == 15
+    assert lst.position.line == 10

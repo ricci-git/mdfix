@@ -48,7 +48,17 @@ def test_parse_without_headings(tmp_path):
 
     document = parse_markdown(md)
 
-    assert document.elements == []
+    assert len(document.elements) == 2
+
+    paragraph1 = document.elements[0]
+    assert paragraph1.text == "Hello"
+    assert paragraph1.position.line == 1
+    assert paragraph1.position.column == 1
+
+    paragraph2 = document.elements[1]
+    assert paragraph2.text == "World"
+    assert paragraph2.position.line == 2
+    assert paragraph2.position.column == 1
 
 
 def test_parse_all_heading_levels(tmp_path):
@@ -85,3 +95,20 @@ def test_ignore_invalid_heading_level(tmp_path):
     document = parse_markdown(md)
 
     assert document.elements == []
+
+def test_parse_single_paragraph(tmp_path):
+    md = tmp_path / "paragraph.md"
+
+    md.write_text(
+        "Hello world.\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    paragraph = document.elements[0]
+    assert paragraph.text == "Hello world."
+    assert paragraph.position.line == 1
+    assert paragraph.position.column == 1

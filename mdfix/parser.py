@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from .document import Document
-from .elements import Element, Heading, SourcePosition
+from .elements import Element, Heading, Paragraph, SourcePosition
 
 
 def parse_markdown(path: Path) -> Document:
@@ -41,5 +41,14 @@ def parse_elements(content: str) -> list[Element]:
                     position=SourcePosition(line=line_number),
                 )
             )
+
+            continue
+
+        elements.append(
+            Paragraph(
+                text=stripped,
+                position=SourcePosition(line=line_number),
+            )
+        )
 
     return elements
