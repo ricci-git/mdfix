@@ -48,17 +48,13 @@ def test_parse_without_headings(tmp_path):
 
     document = parse_markdown(md)
 
-    assert len(document.elements) == 2
+    assert len(document.elements) == 1
 
-    paragraph1 = document.elements[0]
-    assert paragraph1.text == "Hello"
-    assert paragraph1.position.line == 1
-    assert paragraph1.position.column == 1
+    paragraph = document.elements[0]
 
-    paragraph2 = document.elements[1]
-    assert paragraph2.text == "World"
-    assert paragraph2.position.line == 2
-    assert paragraph2.position.column == 1
+    assert paragraph.text == "Hello\nWorld"
+    assert paragraph.position.line == 1
+    assert paragraph.position.column == 1
 
 
 def test_parse_all_heading_levels(tmp_path):
@@ -84,6 +80,7 @@ def test_parse_all_heading_levels(tmp_path):
         assert heading.position.line == index
         assert heading.position.column == 1
 
+
 def test_ignore_invalid_heading_level(tmp_path):
     md = tmp_path / "invalid.md"
 
@@ -95,6 +92,7 @@ def test_ignore_invalid_heading_level(tmp_path):
     document = parse_markdown(md)
 
     assert document.elements == []
+
 
 def test_parse_single_paragraph(tmp_path):
     md = tmp_path / "paragraph.md"
@@ -112,3 +110,27 @@ def test_parse_single_paragraph(tmp_path):
     assert paragraph.text == "Hello world."
     assert paragraph.position.line == 1
     assert paragraph.position.column == 1
+
+
+def test_parse_multiline_paragraph(tmp_path):
+    md = tmp_path / "paragraph.md"
+
+    md.write_text(
+        "Hello\n"
+        "world\n"
+        "\n"
+        "Second paragraph\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 2
+
+    first = document.elements[0]
+    assert first.text == "Hello\nworld"
+    assert first.position.line == 1
+
+    second = document.elements[1]
+    assert second.text == "Second paragraph"
+    assert second.position.line == 4
