@@ -134,3 +134,51 @@ def test_parse_multiline_paragraph(tmp_path):
     second = document.elements[1]
     assert second.text == "Second paragraph"
     assert second.position.line == 4
+
+
+def test_parse_unordered_list(tmp_path):
+    md = tmp_path / "list.md"
+
+    md.write_text(
+        "- First\n"
+        "- Second\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    lst = document.elements[0]
+
+    assert lst.ordered is False
+    assert lst.items == [
+        "First",
+        "Second",
+    ]
+    assert lst.position.line == 1
+    assert lst.position.column == 1
+
+
+def test_parse_ordered_list(tmp_path):
+    md = tmp_path / "list.md"
+
+    md.write_text(
+        "1. First\n"
+        "2. Second\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    lst = document.elements[0]
+
+    assert lst.ordered is True
+    assert lst.items == [
+        "First",
+        "Second",
+    ]
+    assert lst.position.line == 1
+    assert lst.position.column == 1
