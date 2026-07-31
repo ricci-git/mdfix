@@ -17,9 +17,13 @@ def version():
     print(f"mdfix {__version__}")
 
 
+from typing import Annotated
+
+DEFAULT_SCAN_PATH = Path(".")
+
 @app.command()
 def scan(
-    path: Path = typer.Argument(Path(".")),
+    path: Annotated[Path, typer.Argument()] = DEFAULT_SCAN_PATH,
 ):
     """Scan markdown files."""
 

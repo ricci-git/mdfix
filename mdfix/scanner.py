@@ -2,7 +2,6 @@ from pathlib import Path
 
 from .models import MarkdownFile
 
-
 DEFAULT_EXCLUDES = {
     ".git",
     ".venv",
