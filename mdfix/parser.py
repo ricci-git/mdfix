@@ -2,6 +2,7 @@ from pathlib import Path
 
 from .document import Document
 from .elements import (
+    CodeBlock,
     Element,
     Heading,
     List,
@@ -40,6 +41,22 @@ def parse_ordered_list_item(line: str) -> str | None:
     return None
 
 
+def is_code_fence(line: str) -> bool:
+    return line.startswith("```")
+
+
+def code_fence_language(line: str) -> str | None:
+    if not is_code_fence(line):
+        return None
+
+    language = line[3:].strip()
+
+    if not language:
+        return None
+
+    return language
+
+
 def parse_markdown(path: Path) -> Document:
     content = path.read_text(encoding="utf-8")
 
@@ -62,6 +79,11 @@ def parse_elements(content: str) -> list[Element]:
     list_items: list[str] = []
     list_ordered: bool | None = None
     list_start_line: int | None = None
+
+    in_code_block = False
+    code_language: str | None = None
+    code_lines: list[str] = []
+    code_start_line: int | None = None
 
     def flush_paragraph():
         nonlocal paragraph_lines, paragraph_start_line
@@ -97,8 +119,48 @@ def parse_elements(content: str) -> list[Element]:
             list_ordered = None
             list_start_line = None
 
+    def flush_code_block():
+        nonlocal in_code_block, code_language, code_lines, code_start_line
+
+        if code_start_line is None:
+            return
+
+        elements.append(
+            CodeBlock(
+                language=code_language,
+                code="\n".join(code_lines),
+                position=SourcePosition(
+                    line=code_start_line,
+                ),
+            )
+        )
+
+        in_code_block = False
+        code_language = None
+        code_lines = []
+        code_start_line = None
+
     for line_number, line in enumerate(content.splitlines(), start=1):
         stripped = line.strip()
+
+        if in_code_block:
+            if is_code_fence(stripped):
+                flush_code_block()
+            else:
+                code_lines.append(line)
+
+            continue
+
+        if is_code_fence(stripped):
+            flush_paragraph()
+            flush_list()
+
+            in_code_block = True
+            code_language = code_fence_language(stripped)
+            code_lines = []
+            code_start_line = line_number
+
+            continue
 
         if not stripped:
             flush_paragraph()
@@ -111,13 +173,13 @@ def parse_elements(content: str) -> list[Element]:
             flush_paragraph()
             flush_list()
 
-            title = stripped[level:].strip()
-
             elements.append(
                 Heading(
                     level=level,
-                    title=title,
-                    position=SourcePosition(line=line_number),
+                    title=stripped[level:].strip(),
+                    position=SourcePosition(
+                        line=line_number,
+                    ),
                 )
             )
 
@@ -155,6 +217,9 @@ def parse_elements(content: str) -> list[Element]:
             paragraph_start_line = line_number
 
         paragraph_lines.append(stripped)
+
+    if in_code_block:
+        flush_code_block()
 
     flush_list()
     flush_paragraph()

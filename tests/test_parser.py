@@ -229,3 +229,75 @@ def test_parse_mixed_document(tmp_path):
 
     paragraph = document.elements[3]
     assert paragraph.text == "Last paragraph"
+
+
+def test_parse_python_code_block(tmp_path):
+    md = tmp_path / "code.md"
+
+    md.write_text(
+        "```python\n"
+        "print('Hello')\n"
+        "```\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    block = document.elements[0]
+
+    assert block.language == "python"
+    assert block.code == "print('Hello')"
+    assert block.position.line == 1
+
+
+def test_parse_plain_code_block(tmp_path):
+    md = tmp_path / "code.md"
+
+    md.write_text(
+        "```\n"
+        "Hello\n"
+        "World\n"
+        "```\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    block = document.elements[0]
+
+    assert block.language is None
+    assert block.code == "Hello\nWorld"
+
+    assert block.position.line == 1
+
+
+def test_parse_document_with_code_block(tmp_path):
+    md = tmp_path / "mixed.md"
+
+    md.write_text(
+        "# Title\n"
+        "\n"
+        "```python\n"
+        "print(1)\n"
+        "```\n"
+        "\n"
+        "Paragraph\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 3
+
+    assert document.elements[0].title == "Title"
+
+    block = document.elements[1]
+    assert block.language == "python"
+    assert block.code == "print(1)"
+
+    paragraph = document.elements[2]
+    assert paragraph.text == "Paragraph"
