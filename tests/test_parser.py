@@ -81,7 +81,7 @@ def test_parse_all_heading_levels(tmp_path):
         assert heading.position.column == 1
 
 
-def test_ignore_invalid_heading_level(tmp_path):
+def test_invalid_heading_is_paragraph(tmp_path):
     md = tmp_path / "invalid.md"
 
     md.write_text(
@@ -91,7 +91,13 @@ def test_ignore_invalid_heading_level(tmp_path):
 
     document = parse_markdown(md)
 
-    assert document.elements == []
+    assert len(document.elements) == 1
+
+    paragraph = document.elements[0]
+
+    assert paragraph.text == "####### Invalid"
+    assert paragraph.position.line == 1
+    assert paragraph.position.column == 1
 
 
 def test_parse_single_paragraph(tmp_path):
@@ -182,3 +188,44 @@ def test_parse_ordered_list(tmp_path):
     ]
     assert lst.position.line == 1
     assert lst.position.column == 1
+
+
+def test_parse_mixed_document(tmp_path):
+    md = tmp_path / "mixed.md"
+
+    md.write_text(
+        "# Title\n"
+        "\n"
+        "First paragraph\n"
+        "continues here\n"
+        "\n"
+        "- First\n"
+        "- Second\n"
+        "\n"
+        "Last paragraph\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 4
+
+    heading = document.elements[0]
+    assert heading.level == 1
+    assert heading.title == "Title"
+
+    paragraph = document.elements[1]
+    assert paragraph.text == (
+        "First paragraph\n"
+        "continues here"
+    )
+
+    lst = document.elements[2]
+    assert lst.ordered is False
+    assert lst.items == [
+        "First",
+        "Second",
+    ]
+
+    paragraph = document.elements[3]
+    assert paragraph.text == "Last paragraph"

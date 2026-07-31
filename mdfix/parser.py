@@ -10,6 +10,36 @@ from .elements import (
 )
 
 
+def heading_level(line: str) -> int | None:
+    if not line.startswith("#"):
+        return None
+
+    level = len(line) - len(line.lstrip("#"))
+
+    if level > 6:
+        return None
+
+    return level
+
+
+def parse_unordered_list_item(line: str) -> str | None:
+    if line.startswith("- "):
+        return line[2:].strip()
+
+    return None
+
+
+def parse_ordered_list_item(line: str) -> str | None:
+    if (
+        len(line) > 2
+        and line[0].isdigit()
+        and line[1:3] == ". "
+    ):
+        return line[3:].strip()
+
+    return None
+
+
 def parse_markdown(path: Path) -> Document:
     content = path.read_text(encoding="utf-8")
 
@@ -67,9 +97,7 @@ def parse_elements(content: str) -> list[Element]:
             list_ordered = None
             list_start_line = None
 
-    lines = content.splitlines()
-
-    for line_number, line in enumerate(lines, start=1):
+    for line_number, line in enumerate(content.splitlines(), start=1):
         stripped = line.strip()
 
         if not stripped:
@@ -77,14 +105,11 @@ def parse_elements(content: str) -> list[Element]:
             flush_list()
             continue
 
-        if stripped.startswith("#"):
+        level = heading_level(stripped)
+
+        if level is not None:
             flush_paragraph()
             flush_list()
-
-            level = len(stripped) - len(stripped.lstrip("#"))
-
-            if level > 6:
-                continue
 
             title = stripped[level:].strip()
 
@@ -98,29 +123,29 @@ def parse_elements(content: str) -> list[Element]:
 
             continue
 
-        if stripped.startswith("- "):
+        item = parse_unordered_list_item(stripped)
+
+        if item is not None:
             flush_paragraph()
 
             if list_start_line is None:
                 list_start_line = line_number
 
             list_ordered = False
-            list_items.append(stripped[2:].strip())
+            list_items.append(item)
 
             continue
 
-        if (
-            len(stripped) > 2
-            and stripped[0].isdigit()
-            and stripped[1:3] == ". "
-        ):
+        item = parse_ordered_list_item(stripped)
+
+        if item is not None:
             flush_paragraph()
 
             if list_start_line is None:
                 list_start_line = line_number
 
             list_ordered = True
-            list_items.append(stripped[3:].strip())
+            list_items.append(item)
 
             continue
 
