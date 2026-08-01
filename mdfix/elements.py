@@ -26,6 +26,11 @@ class Paragraph(Element):
 
 
 @dataclass(slots=True)
+class HorizontalRule(Element):
+    """Horizontal rule element."""
+
+
+@dataclass(slots=True)
 class BlockQuote(Element):
     text: str
 

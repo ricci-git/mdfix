@@ -1,3 +1,4 @@
+from mdfix.elements import HorizontalRule
 from mdfix.parser import parse_markdown
 
 
@@ -406,3 +407,118 @@ def test_parse_blockquote_with_paragraph(tmp_path):
 
     assert document.elements[0].text == "Quote"
     assert document.elements[1].text == "Paragraph"
+
+
+def test_parse_horizontal_rule_dash(tmp_path):
+    md = tmp_path / "hr.md"
+
+    md.write_text(
+        "---\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    rule = document.elements[0]
+
+    assert isinstance(rule, HorizontalRule)
+    assert rule.position.line == 1
+
+
+def test_parse_horizontal_rule_asterisk(tmp_path):
+    md = tmp_path / "hr.md"
+
+    md.write_text(
+        "***\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    rule = document.elements[0]
+
+    assert isinstance(rule, HorizontalRule)
+    assert rule.position.line == 1
+
+
+def test_parse_horizontal_rule_underscore(tmp_path):
+    md = tmp_path / "hr.md"
+
+    md.write_text(
+        "___\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    rule = document.elements[0]
+
+    assert isinstance(rule, HorizontalRule)
+    assert rule.position.line == 1
+
+
+def test_parse_horizontal_rule_with_spaces(tmp_path):
+    md = tmp_path / "hr.md"
+
+    md.write_text(
+        "- - -\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    rule = document.elements[0]
+
+    assert isinstance(rule, HorizontalRule)
+    assert rule.position.line == 1
+
+
+def test_document_with_horizontal_rule(tmp_path):
+    md = tmp_path / "mixed.md"
+
+    md.write_text(
+        "# Title\n"
+        "\n"
+        "---\n"
+        "\n"
+        "Paragraph\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 3
+
+    assert document.elements[0].title == "Title"
+
+    rule = document.elements[1]
+
+    assert isinstance(rule, HorizontalRule)
+    assert rule.position.line == 3
+
+    assert document.elements[2].text == "Paragraph"
+
+
+def test_invalid_horizontal_rule_is_paragraph(tmp_path):
+    md = tmp_path / "invalid_hr.md"
+
+    md.write_text(
+        "----\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    paragraph = document.elements[0]
+
+    assert paragraph.text == "----"

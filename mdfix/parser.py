@@ -6,6 +6,7 @@ from .elements import (
     CodeBlock,
     Element,
     Heading,
+    HorizontalRule,
     List,
     Paragraph,
     SourcePosition,
@@ -22,6 +23,21 @@ def heading_level(line: str) -> int | None:
         return None
 
     return level
+
+
+def is_horizontal_rule(line: str) -> bool:
+    normalized = line.replace(" ", "")
+
+    if len(normalized) != 3:
+        return False
+
+    if normalized[0] not in "-*_":
+        return False
+
+    return all(
+        char == normalized[0]
+        for char in normalized
+    )
 
 
 def parse_unordered_list_item(line: str) -> str | None:
@@ -200,6 +216,21 @@ def parse_elements(content: str) -> list[Element]:
             flush_paragraph()
             flush_list()
             flush_blockquote()
+            continue
+
+        if is_horizontal_rule(stripped):
+            flush_paragraph()
+            flush_list()
+            flush_blockquote()
+
+            elements.append(
+                HorizontalRule(
+                    position=SourcePosition(
+                        line=line_number,
+                    ),
+                )
+            )
+
             continue
 
         level = heading_level(stripped)
