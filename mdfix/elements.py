@@ -37,6 +37,7 @@ class BlockQuote(Element):
 
 @dataclass(slots=True)
 class Table(Element):
+    headers: list[str]
     rows: list[list[str]]
 
 

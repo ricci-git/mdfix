@@ -34,15 +34,31 @@ def test_paragraph():
 
 def test_table():
     table = Table(
+        headers=[
+            "A",
+            "B",
+        ],
         rows=[
-            ["A", "B"],
-            ["1", "2"],
+            [
+                "1",
+                "2",
+            ],
         ],
         position=SourcePosition(line=5),
     )
 
-    assert len(table.rows) == 2
-    assert table.rows[1][1] == "2"
+    assert table.headers == [
+        "A",
+        "B",
+    ]
+
+    assert table.rows == [
+        [
+            "1",
+            "2",
+        ],
+    ]
+
     assert table.position.line == 5
 
 

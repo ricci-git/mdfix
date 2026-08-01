@@ -1,4 +1,4 @@
-from mdfix.elements import HorizontalRule
+from mdfix.elements import HorizontalRule, Table
 from mdfix.parser import parse_markdown
 
 
@@ -522,3 +522,36 @@ def test_invalid_horizontal_rule_is_paragraph(tmp_path):
     paragraph = document.elements[0]
 
     assert paragraph.text == "----"
+
+
+def test_parse_simple_table(tmp_path):
+    md = tmp_path / "table.md"
+
+    md.write_text(
+        "| Name | Age |\n"
+        "| ---- | --- |\n"
+        "| Bob  | 20  |\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    table = document.elements[0]
+
+    assert isinstance(table, Table)
+
+    assert table.headers == [
+        "Name",
+        "Age",
+    ]
+
+    assert table.rows == [
+        [
+            "Bob",
+            "20",
+        ]
+    ]
+
+    assert table.position.line == 1

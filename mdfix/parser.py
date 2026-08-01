@@ -10,6 +10,7 @@ from .elements import (
     List,
     Paragraph,
     SourcePosition,
+    Table,
 )
 
 
@@ -79,6 +80,46 @@ def code_fence_language(line: str) -> str | None:
         return None
 
     return language
+
+
+def is_table_separator(line: str) -> bool:
+    cells = split_table_row(line)
+
+    if not cells:
+        return False
+
+    return all(
+        cell.strip("- ").strip() == ""
+        and "-" in cell
+        for cell in cells
+    )
+
+
+def split_table_row(line: str) -> list[str]:
+    stripped = line.strip()
+
+    if not stripped.startswith("|"):
+        return []
+
+    if not stripped.endswith("|"):
+        return []
+
+    return [
+        cell.strip()
+        for cell in stripped[1:-1].split("|")
+    ]
+
+
+def parse_table(lines: list[str]) -> tuple[list[str], list[list[str]]]:
+    rows = [
+        split_table_row(line)
+        for line in lines
+    ]
+
+    headers = rows[0]
+    body = rows[2:]
+
+    return headers, body
 
 
 def parse_markdown(path: Path) -> Document:
@@ -186,10 +227,16 @@ def parse_elements(content: str) -> list[Element]:
         code_lines = []
         code_start_line = None
 
-    for line_number, line in enumerate(
-        content.splitlines(),
-        start=1,
-    ):
+    lines = content.splitlines()
+
+    line_number = 0
+
+    while line_number < len(lines):
+        current_line = lines[line_number]
+        line_number += 1
+
+        line = current_line
+        line = line.rstrip()
         stripped = line.strip()
 
         if in_code_block:
@@ -234,6 +281,45 @@ def parse_elements(content: str) -> list[Element]:
             continue
 
         level = heading_level(stripped)
+
+        if (
+            line_number < len(lines)
+            and split_table_row(stripped)
+            and is_table_separator(lines[line_number])
+        ):
+            flush_paragraph()
+            flush_list()
+            flush_blockquote()
+
+            table_lines = [
+                stripped,
+                lines[line_number],
+            ]
+
+            line_number += 1
+
+            while line_number < len(lines):
+                next_row = lines[line_number].strip()
+
+                if not split_table_row(next_row):
+                    break
+
+                table_lines.append(next_row)
+                line_number += 1
+
+            headers, rows = parse_table(table_lines)
+
+            elements.append(
+                Table(
+                    headers=headers,
+                    rows=rows,
+                    position=SourcePosition(
+                        line=line_number - len(table_lines) + 1,
+                    ),
+                )
+            )
+
+            continue
 
         if level is not None:
             flush_paragraph()
