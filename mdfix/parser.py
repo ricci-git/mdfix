@@ -2,6 +2,7 @@ from pathlib import Path
 
 from .document import Document
 from .elements import (
+    BlockQuote,
     CodeBlock,
     Element,
     Heading,
@@ -37,6 +38,13 @@ def parse_ordered_list_item(line: str) -> str | None:
         and line[1:3] == ". "
     ):
         return line[3:].strip()
+
+    return None
+
+
+def parse_blockquote_line(line: str) -> str | None:
+    if line.startswith(">"):
+        return line[1:].strip()
 
     return None
 
@@ -80,6 +88,9 @@ def parse_elements(content: str) -> list[Element]:
     list_ordered: bool | None = None
     list_start_line: int | None = None
 
+    blockquote_lines: list[str] = []
+    blockquote_start_line: int | None = None
+
     in_code_block = False
     code_language: str | None = None
     code_lines: list[str] = []
@@ -119,8 +130,27 @@ def parse_elements(content: str) -> list[Element]:
             list_ordered = None
             list_start_line = None
 
+    def flush_blockquote():
+        nonlocal blockquote_lines, blockquote_start_line
+
+        if blockquote_lines:
+            elements.append(
+                BlockQuote(
+                    text="\n".join(blockquote_lines),
+                    position=SourcePosition(
+                        line=blockquote_start_line,
+                    ),
+                )
+            )
+
+            blockquote_lines = []
+            blockquote_start_line = None
+
     def flush_code_block():
-        nonlocal in_code_block, code_language, code_lines, code_start_line
+        nonlocal in_code_block
+        nonlocal code_language
+        nonlocal code_lines
+        nonlocal code_start_line
 
         if code_start_line is None:
             return
@@ -140,7 +170,10 @@ def parse_elements(content: str) -> list[Element]:
         code_lines = []
         code_start_line = None
 
-    for line_number, line in enumerate(content.splitlines(), start=1):
+    for line_number, line in enumerate(
+        content.splitlines(),
+        start=1,
+    ):
         stripped = line.strip()
 
         if in_code_block:
@@ -154,6 +187,7 @@ def parse_elements(content: str) -> list[Element]:
         if is_code_fence(stripped):
             flush_paragraph()
             flush_list()
+            flush_blockquote()
 
             in_code_block = True
             code_language = code_fence_language(stripped)
@@ -165,6 +199,7 @@ def parse_elements(content: str) -> list[Element]:
         if not stripped:
             flush_paragraph()
             flush_list()
+            flush_blockquote()
             continue
 
         level = heading_level(stripped)
@@ -172,6 +207,7 @@ def parse_elements(content: str) -> list[Element]:
         if level is not None:
             flush_paragraph()
             flush_list()
+            flush_blockquote()
 
             elements.append(
                 Heading(
@@ -185,10 +221,24 @@ def parse_elements(content: str) -> list[Element]:
 
             continue
 
+        quote = parse_blockquote_line(stripped)
+
+        if quote is not None:
+            flush_paragraph()
+            flush_list()
+
+            if blockquote_start_line is None:
+                blockquote_start_line = line_number
+
+            blockquote_lines.append(quote)
+
+            continue
+
         item = parse_unordered_list_item(stripped)
 
         if item is not None:
             flush_paragraph()
+            flush_blockquote()
 
             if list_start_line is None:
                 list_start_line = line_number
@@ -202,6 +252,7 @@ def parse_elements(content: str) -> list[Element]:
 
         if item is not None:
             flush_paragraph()
+            flush_blockquote()
 
             if list_start_line is None:
                 list_start_line = line_number
@@ -212,6 +263,7 @@ def parse_elements(content: str) -> list[Element]:
             continue
 
         flush_list()
+        flush_blockquote()
 
         if paragraph_start_line is None:
             paragraph_start_line = line_number
@@ -222,6 +274,7 @@ def parse_elements(content: str) -> list[Element]:
         flush_code_block()
 
     flush_list()
+    flush_blockquote()
     flush_paragraph()
 
     return elements

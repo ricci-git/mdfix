@@ -26,6 +26,11 @@ class Paragraph(Element):
 
 
 @dataclass(slots=True)
+class BlockQuote(Element):
+    text: str
+
+
+@dataclass(slots=True)
 class Table(Element):
     rows: list[list[str]]
 

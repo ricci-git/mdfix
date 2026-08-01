@@ -301,3 +301,108 @@ def test_parse_document_with_code_block(tmp_path):
 
     paragraph = document.elements[2]
     assert paragraph.text == "Paragraph"
+
+
+def test_parse_blockquote(tmp_path):
+    md = tmp_path / "quote.md"
+
+    md.write_text(
+        "> Hello\n"
+        "> World\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    quote = document.elements[0]
+
+    assert quote.text == (
+        "Hello\n"
+        "World"
+    )
+
+    assert quote.position.line == 1
+
+
+def test_parse_single_blockquote(tmp_path):
+    md = tmp_path / "quote.md"
+
+    md.write_text(
+        "> Hello world\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    quote = document.elements[0]
+
+    assert quote.text == "Hello world"
+    assert quote.position.line == 1
+
+
+def test_parse_multiline_blockquote(tmp_path):
+    md = tmp_path / "quote.md"
+
+    md.write_text(
+        "> First line\n"
+        "> Second line\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    quote = document.elements[0]
+
+    assert quote.text == (
+        "First line\n"
+        "Second line"
+    )
+
+
+def test_parse_document_with_blockquote(tmp_path):
+    md = tmp_path / "mixed.md"
+
+    md.write_text(
+        "# Title\n"
+        "\n"
+        "> Quote text\n"
+        "\n"
+        "Paragraph\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 3
+
+    assert document.elements[0].title == "Title"
+
+    quote = document.elements[1]
+    assert quote.text == "Quote text"
+
+    paragraph = document.elements[2]
+    assert paragraph.text == "Paragraph"
+
+
+def test_parse_blockquote_with_paragraph(tmp_path):
+    md = tmp_path / "quote.md"
+
+    md.write_text(
+        "> Quote\n"
+        "\n"
+        "Paragraph\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 2
+
+    assert document.elements[0].text == "Quote"
+    assert document.elements[1].text == "Paragraph"
