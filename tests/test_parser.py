@@ -1,4 +1,9 @@
-from mdfix.elements import HorizontalRule, Table
+from mdfix.elements import (
+    Heading,
+    HorizontalRule,
+    Paragraph,
+    Table,
+)
 from mdfix.parser import parse_markdown
 
 
@@ -552,6 +557,206 @@ def test_parse_simple_table(tmp_path):
             "Bob",
             "20",
         ]
+    ]
+
+    assert table.position.line == 1
+
+
+def test_parse_table_multiple_rows(tmp_path):
+    md = tmp_path / "table.md"
+
+    md.write_text(
+        "| Name | Age |\n"
+        "| ---- | --- |\n"
+        "| Bob  | 20  |\n"
+        "| Ann  | 25  |\n"
+        "| Tom  | 31  |\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    table = document.elements[0]
+
+    assert isinstance(table, Table)
+
+    assert table.headers == [
+        "Name",
+        "Age",
+    ]
+
+    assert table.rows == [
+        [
+            "Bob",
+            "20",
+        ],
+        [
+            "Ann",
+            "25",
+        ],
+        [
+            "Tom",
+            "31",
+        ],
+    ]
+
+
+def test_parse_table_empty_cells(tmp_path):
+    md = tmp_path / "table.md"
+
+    md.write_text(
+        "| Name | Age | City |\n"
+        "| ---- | --- | ---- |\n"
+        "| Bob  | 20  |      |\n"
+        "| Ann  |     | Paris |\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    table = document.elements[0]
+
+    assert isinstance(table, Table)
+
+    assert table.headers == [
+        "Name",
+        "Age",
+        "City",
+    ]
+
+    assert table.rows == [
+        [
+            "Bob",
+            "20",
+            "",
+        ],
+        [
+            "Ann",
+            "",
+            "Paris",
+        ],
+    ]
+
+
+def test_parse_table_inside_document(tmp_path):
+    md = tmp_path / "table.md"
+
+    md.write_text(
+        "# Users\n"
+        "\n"
+        "User list:\n"
+        "\n"
+        "| Name | Age |\n"
+        "| ---- | --- |\n"
+        "| Bob  | 20  |\n"
+        "\n"
+        "End.\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 4
+
+    assert isinstance(document.elements[0], Heading)
+    assert document.elements[0].title == "Users"
+
+    assert isinstance(document.elements[1], Paragraph)
+    assert document.elements[1].text == "User list:"
+
+    assert isinstance(document.elements[2], Table)
+    assert document.elements[2].headers == [
+        "Name",
+        "Age",
+    ]
+
+    assert isinstance(document.elements[3], Paragraph)
+    assert document.elements[3].text == "End."
+
+
+def test_invalid_table_without_separator_is_paragraph(tmp_path):
+    md = tmp_path / "invalid_table.md"
+
+    md.write_text(
+        "| Name | Age |\n"
+        "| Bob  | 20  |\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    paragraph = document.elements[0]
+
+    assert isinstance(paragraph, Paragraph)
+
+    assert paragraph.text == (
+        "| Name | Age |\n"
+        "| Bob  | 20  |"
+    )
+
+
+def test_invalid_table_without_header_is_paragraph(tmp_path):
+    md = tmp_path / "invalid_table.md"
+
+    md.write_text(
+        "| ---- | --- |\n"
+        "| Bob  | 20  |\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    paragraph = document.elements[0]
+
+    assert isinstance(paragraph, Paragraph)
+
+    assert paragraph.text == (
+        "| ---- | --- |\n"
+        "| Bob  | 20  |"
+    )
+
+
+def test_parse_table_inconsistent_columns(tmp_path):
+    md = tmp_path / "table.md"
+
+    md.write_text(
+        "| Name | Age |\n"
+        "| ---- | --- |\n"
+        "| Bob |\n"
+        "| Ann | 25 | City |\n",
+        encoding="utf-8",
+    )
+
+    document = parse_markdown(md)
+
+    assert len(document.elements) == 1
+
+    table = document.elements[0]
+
+    assert isinstance(table, Table)
+
+    assert table.headers == [
+        "Name",
+        "Age",
+    ]
+
+    assert table.rows == [
+        [
+            "Bob",
+        ],
+        [
+            "Ann",
+            "25",
+            "City",
+        ],
     ]
 
     assert table.position.line == 1
