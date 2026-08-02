@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from .inline_elements import InlineElement
+
 
 @dataclass(slots=True)
 class SourcePosition:
@@ -23,6 +25,7 @@ class Heading(Element):
 @dataclass(slots=True)
 class Paragraph(Element):
     text: str
+    inline: list[InlineElement] | None = None
 
 
 @dataclass(slots=True)

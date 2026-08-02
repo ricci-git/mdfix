@@ -84,3 +84,15 @@ def test_list():
     assert lst.ordered is False
     assert len(lst.items) == 2
     assert lst.position.line == 10
+
+
+
+
+def test_paragraph_without_inline():
+    paragraph = Paragraph(
+        text="hello",
+        position=SourcePosition(line=1),
+    )
+
+    assert paragraph.text == "hello"
+    assert paragraph.inline is None
