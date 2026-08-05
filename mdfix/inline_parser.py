@@ -1,4 +1,10 @@
-from mdfix.inline_elements import Emphasis, InlineElement, Strong, Text
+from mdfix.inline_elements import (
+    Emphasis,
+    InlineCode,
+    InlineElement,
+    Strong,
+    Text,
+)
 
 
 def parse_inline(text: str) -> list[InlineElement]:
@@ -15,6 +21,7 @@ def parse_inline(text: str) -> list[InlineElement]:
         ("__", Strong),
         ("*", Emphasis),
         ("_", Emphasis),
+        ("`", InlineCode),
     ):
         if candidate in text:
             marker = candidate
@@ -41,13 +48,16 @@ def parse_inline(text: str) -> list[InlineElement]:
     if start > 0:
         elements.append(Text(text[:start]))
 
-    elements.append(
-        element_type(
-            children=[
-                Text(content),
-            ],
+    if element_type is InlineCode:
+        elements.append(InlineCode(code=content))
+    else:
+        elements.append(
+            element_type(
+                children=[
+                    Text(content),
+                ],
+            )
         )
-    )
 
     if end + len(marker) < len(text):
         elements.append(Text(text[end + len(marker):]))

@@ -1,4 +1,4 @@
-from mdfix.inline_elements import Emphasis, Strong, Text
+from mdfix.inline_elements import Emphasis, InlineCode, Strong, Text
 from mdfix.inline_parser import parse_inline
 
 
@@ -152,3 +152,39 @@ def test_parse_empty_emphasis():
     assert len(result) == 1
     assert isinstance(result[0], Text)
     assert result[0].text == "**"
+
+
+def test_parse_inline_code():
+    result = parse_inline("`hello`")
+
+    assert len(result) == 1
+    assert isinstance(result[0], InlineCode)
+    assert result[0].code == "hello"
+
+
+def test_parse_text_with_inline_code():
+    result = parse_inline("Hello `world`")
+
+    assert len(result) == 2
+
+    assert isinstance(result[0], Text)
+    assert result[0].text == "Hello "
+
+    assert isinstance(result[1], InlineCode)
+    assert result[1].code == "world"
+
+
+def test_parse_unclosed_inline_code():
+    result = parse_inline("Hello `world")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Text)
+    assert result[0].text == "Hello `world"
+
+
+def test_parse_empty_inline_code():
+    result = parse_inline("``")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Text)
+    assert result[0].text == "``"
