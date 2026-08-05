@@ -47,6 +47,18 @@ def find_marker(text: str) -> tuple[str, type[InlineElement]] | None:
     return None
 
 
+def create_link_element(
+    label: str,
+    url: str,
+) -> Link:
+    return Link(
+        children=[
+            Text(label),
+        ],
+        url=url,
+    )
+
+
 def create_inline_element(
     element_type: type[InlineElement],
     content: str,
@@ -80,11 +92,9 @@ def parse_inline(text: str) -> list[InlineElement]:
             elements.append(Text(text[:start]))
 
         elements.append(
-            Link(
-                children=[
-                    Text(label),
-                ],
-                url=url,
+            create_link_element(
+                label,
+                url,
             )
         )
 
@@ -125,8 +135,6 @@ def parse_inline(text: str) -> list[InlineElement]:
     )
 
     if end + len(marker) < len(text):
-        elements.append(
-            Text(text[end + len(marker):])
-        )
+        elements.append(Text(text[end + len(marker):]))
 
     return elements
