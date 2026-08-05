@@ -47,6 +47,22 @@ def find_marker(text: str) -> tuple[str, type[InlineElement]] | None:
     return None
 
 
+def create_inline_element(
+    element_type: type[InlineElement],
+    content: str,
+) -> InlineElement:
+    if element_type is InlineCode:
+        return InlineCode(
+            code=content,
+        )
+
+    return element_type(
+        children=[
+            Text(content),
+        ],
+    )
+
+
 def parse_inline(text: str) -> list[InlineElement]:
     """Parse inline Markdown into Inline AST."""
 
@@ -101,20 +117,12 @@ def parse_inline(text: str) -> list[InlineElement]:
     if start > 0:
         elements.append(Text(text[:start]))
 
-    if element_type is InlineCode:
-        elements.append(
-            InlineCode(
-                code=content,
-            )
+    elements.append(
+        create_inline_element(
+            element_type,
+            content,
         )
-    else:
-        elements.append(
-            element_type(
-                children=[
-                    Text(content),
-                ],
-            )
-        )
+    )
 
     if end + len(marker) < len(text):
         elements.append(
