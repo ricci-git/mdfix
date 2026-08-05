@@ -1,4 +1,4 @@
-from mdfix.inline_elements import InlineElement, Strong, Text
+from mdfix.inline_elements import Emphasis, InlineElement, Strong, Text
 
 
 def parse_inline(text: str) -> list[InlineElement]:
@@ -8,10 +8,17 @@ def parse_inline(text: str) -> list[InlineElement]:
         return []
 
     marker = None
+    element_type = None
 
-    for candidate in ("**", "__"):
+    for candidate, cls in (
+        ("**", Strong),
+        ("__", Strong),
+        ("*", Emphasis),
+        ("_", Emphasis),
+    ):
         if candidate in text:
             marker = candidate
+            element_type = cls
             break
 
     if marker is None:
@@ -35,7 +42,7 @@ def parse_inline(text: str) -> list[InlineElement]:
         elements.append(Text(text[:start]))
 
     elements.append(
-        Strong(
+        element_type(
             children=[
                 Text(content),
             ],
