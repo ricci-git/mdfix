@@ -1,4 +1,10 @@
-from mdfix.inline_elements import Emphasis, InlineCode, Strong, Text
+from mdfix.inline_elements import (
+    Emphasis,
+    InlineCode,
+    Link,
+    Strong,
+    Text,
+)
 from mdfix.inline_parser import parse_inline
 
 
@@ -188,3 +194,53 @@ def test_parse_empty_inline_code():
     assert len(result) == 1
     assert isinstance(result[0], Text)
     assert result[0].text == "``"
+
+
+def test_parse_link():
+    result = parse_inline("[example](https://example.com)")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Link)
+
+    link = result[0]
+
+    assert link.url == "https://example.com"
+    assert len(link.children) == 1
+    assert isinstance(link.children[0], Text)
+    assert link.children[0].text == "example"
+
+
+def test_parse_text_with_link():
+    result = parse_inline("Visit [example](https://example.com)")
+
+    assert len(result) == 2
+
+    assert isinstance(result[0], Text)
+    assert result[0].text == "Visit "
+
+    assert isinstance(result[1], Link)
+    assert result[1].url == "https://example.com"
+
+
+def test_parse_empty_link_text():
+    result = parse_inline("[](https://example.com)")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Text)
+    assert result[0].text == "[](https://example.com)"
+
+
+def test_parse_unclosed_link():
+    result = parse_inline("[example](https://example.com")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Text)
+    assert result[0].text == "[example](https://example.com"
+
+
+def test_parse_link_without_url():
+    result = parse_inline("[example]()")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Text)
+    assert result[0].text == "[example]()"

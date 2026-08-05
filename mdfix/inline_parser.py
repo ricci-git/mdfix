@@ -2,6 +2,7 @@ from mdfix.inline_elements import (
     Emphasis,
     InlineCode,
     InlineElement,
+    Link,
     Strong,
     Text,
 )
@@ -13,6 +14,38 @@ def parse_inline(text: str) -> list[InlineElement]:
     if not text:
         return []
 
+    link_start = text.find("[")
+
+    if link_start != -1:
+        label_end = text.find("](", link_start)
+
+        if label_end != -1:
+            url_end = text.find(")", label_end)
+
+            if url_end != -1:
+                label = text[link_start + 1:label_end]
+                url = text[label_end + 2:url_end]
+
+                if label and url:
+                    elements: list[InlineElement] = []
+
+                    if link_start > 0:
+                        elements.append(Text(text[:link_start]))
+
+                    elements.append(
+                        Link(
+                            children=[
+                                Text(label),
+                            ],
+                            url=url,
+                        )
+                    )
+
+                    if url_end + 1 < len(text):
+                        elements.append(Text(text[url_end + 1:]))
+
+                    return elements
+
     marker = None
     element_type = None
 
@@ -22,6 +55,7 @@ def parse_inline(text: str) -> list[InlineElement]:
         ("*", Emphasis),
         ("_", Emphasis),
         ("`", InlineCode),
+        ("[", Link),
     ):
         if candidate in text:
             marker = candidate
