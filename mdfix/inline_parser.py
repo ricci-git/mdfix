@@ -8,66 +8,85 @@ from mdfix.inline_elements import (
 )
 
 
-def parse_inline(text: str) -> list[InlineElement]:
-    """Parse inline Markdown into Inline AST."""
+def find_link(text: str) -> tuple[int, int, str, str] | None:
+    start = text.find("[")
 
-    if not text:
-        return []
+    if start == -1:
+        return None
 
-    link_start = text.find("[")
+    label_end = text.find("](", start)
 
-    if link_start != -1:
-        label_end = text.find("](", link_start)
+    if label_end == -1:
+        return None
 
-        if label_end != -1:
-            url_end = text.find(")", label_end)
+    url_end = text.find(")", label_end)
 
-            if url_end != -1:
-                label = text[link_start + 1:label_end]
-                url = text[label_end + 2:url_end]
+    if url_end == -1:
+        return None
 
-                if label and url:
-                    elements: list[InlineElement] = []
+    label = text[start + 1:label_end]
+    url = text[label_end + 2:url_end]
 
-                    if link_start > 0:
-                        elements.append(Text(text[:link_start]))
+    if not label or not url:
+        return None
 
-                    elements.append(
-                        Link(
-                            children=[
-                                Text(label),
-                            ],
-                            url=url,
-                        )
-                    )
+    return start, url_end, label, url
 
-                    if url_end + 1 < len(text):
-                        elements.append(Text(text[url_end + 1:]))
 
-                    return elements
-
-    marker = None
-    element_type = None
-
+def find_marker(text: str) -> tuple[str, type[InlineElement]] | None:
     for candidate, cls in (
         ("**", Strong),
         ("__", Strong),
         ("*", Emphasis),
         ("_", Emphasis),
         ("`", InlineCode),
-        ("[", Link),
     ):
         if candidate in text:
-            marker = candidate
-            element_type = cls
-            break
+            return candidate, cls
 
-    if marker is None:
+    return None
+
+
+def parse_inline(text: str) -> list[InlineElement]:
+    """Parse inline Markdown into Inline AST."""
+
+    if not text:
+        return []
+
+    link = find_link(text)
+
+    if link:
+        start, end, label, url = link
+
+        elements: list[InlineElement] = []
+
+        if start > 0:
+            elements.append(Text(text[:start]))
+
+        elements.append(
+            Link(
+                children=[
+                    Text(label),
+                ],
+                url=url,
+            )
+        )
+
+        if end + 1 < len(text):
+            elements.append(Text(text[end + 1:]))
+
+        return elements
+
+    marker_result = find_marker(text)
+
+    if marker_result is None:
         return [Text(text)]
+
+    marker, element_type = marker_result
 
     start = text.find(marker)
 
-    end = text.find(marker, start + 2)
+    end = text.find(marker, start + len(marker))
 
     if end == -1:
         return [Text(text)]
@@ -83,7 +102,11 @@ def parse_inline(text: str) -> list[InlineElement]:
         elements.append(Text(text[:start]))
 
     if element_type is InlineCode:
-        elements.append(InlineCode(code=content))
+        elements.append(
+            InlineCode(
+                code=content,
+            )
+        )
     else:
         elements.append(
             element_type(
@@ -94,6 +117,8 @@ def parse_inline(text: str) -> list[InlineElement]:
         )
 
     if end + len(marker) < len(text):
-        elements.append(Text(text[end + len(marker):]))
+        elements.append(
+            Text(text[end + len(marker):])
+        )
 
     return elements
