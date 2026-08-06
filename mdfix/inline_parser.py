@@ -52,9 +52,7 @@ def create_link_element(
     url: str,
 ) -> Link:
     return Link(
-        children=[
-            Text(label),
-        ],
+        children=parse_inline(label),
         url=url,
     )
 

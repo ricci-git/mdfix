@@ -244,3 +244,47 @@ def test_parse_link_without_url():
     assert len(result) == 1
     assert isinstance(result[0], Text)
     assert result[0].text == "[example]()"
+
+
+def test_parse_link_with_strong_child():
+    result = parse_inline("[**bold**](https://example.com)")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Link)
+
+    link = result[0]
+
+    assert len(link.children) == 1
+    assert isinstance(link.children[0], Strong)
+
+    strong = link.children[0]
+
+    assert len(strong.children) == 1
+    assert isinstance(strong.children[0], Text)
+    assert strong.children[0].text == "bold"
+
+
+def test_parse_link_with_emphasis_child():
+    result = parse_inline("[*italic*](https://example.com)")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Link)
+
+    link = result[0]
+
+    assert len(link.children) == 1
+    assert isinstance(link.children[0], Emphasis)
+
+
+def test_parse_link_with_inline_code_child():
+    result = parse_inline("[`code`](https://example.com)")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Link)
+
+    link = result[0]
+
+    assert len(link.children) == 1
+    assert isinstance(link.children[0], InlineCode)
+
+    assert link.children[0].code == "code"
