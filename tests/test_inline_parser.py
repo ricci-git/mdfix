@@ -288,3 +288,78 @@ def test_parse_link_with_inline_code_child():
     assert isinstance(link.children[0], InlineCode)
 
     assert link.children[0].code == "code"
+
+
+def test_parse_unmatched_strong_marker():
+    result = parse_inline("Hello ** world")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Text)
+    assert result[0].text == "Hello ** world"
+
+
+def test_parse_unmatched_emphasis_marker():
+    result = parse_inline("Hello * world")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Text)
+    assert result[0].text == "Hello * world"
+
+
+def test_parse_empty_strong_underscore():
+    result = parse_inline("____")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Text)
+    assert result[0].text == "____"
+
+
+def test_parse_empty_emphasis_underscore():
+    result = parse_inline("__")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Text)
+    assert result[0].text == "__"
+
+
+def test_parse_link_with_text_after():
+    result = parse_inline("[example](https://example.com)test")
+
+    assert len(result) == 2
+
+    assert isinstance(result[0], Link)
+    assert result[0].url == "https://example.com"
+
+    assert isinstance(result[1], Text)
+    assert result[1].text == "test"
+
+
+def test_parse_link_with_spaces_in_label():
+    result = parse_inline("[hello world](https://example.com)")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Link)
+
+    link = result[0]
+
+    assert len(link.children) == 1
+    assert isinstance(link.children[0], Text)
+    assert link.children[0].text == "hello world"
+
+
+def test_parse_link_with_mixed_children():
+    result = parse_inline(
+        "[hello **world**](https://example.com)"
+    )
+
+    assert len(result) == 1
+    assert isinstance(result[0], Link)
+
+    link = result[0]
+
+    assert len(link.children) == 2
+
+    assert isinstance(link.children[0], Text)
+    assert link.children[0].text == "hello "
+
+    assert isinstance(link.children[1], Strong)
