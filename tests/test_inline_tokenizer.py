@@ -1,0 +1,79 @@
+from mdfix.inline_tokenizer import tokenize
+from mdfix.inline_tokens import InlineToken, TokenType
+
+
+def test_tokenize_plain_text():
+    result = tokenize("hello")
+
+    assert result == [
+        InlineToken(TokenType.TEXT, "hello"),
+    ]
+
+
+def test_tokenize_strong():
+    result = tokenize("**bold**")
+
+    assert result == [
+        InlineToken(TokenType.STRONG_OPEN),
+        InlineToken(TokenType.TEXT, "bold"),
+        InlineToken(TokenType.STRONG_CLOSE),
+    ]
+
+
+def test_tokenize_emphasis():
+    result = tokenize("*italic*")
+
+    assert result == [
+        InlineToken(TokenType.EMPHASIS_OPEN),
+        InlineToken(TokenType.TEXT, "italic"),
+        InlineToken(TokenType.EMPHASIS_CLOSE),
+    ]
+
+
+def test_tokenize_inline_code():
+    result = tokenize("`code`")
+
+    assert result == [
+        InlineToken(TokenType.CODE_OPEN),
+        InlineToken(TokenType.TEXT, "code"),
+        InlineToken(TokenType.CODE_CLOSE),
+    ]
+
+
+def test_tokenize_link():
+    result = tokenize("[example](https://example.com)")
+
+    assert result == [
+        InlineToken(TokenType.LINK_OPEN),
+        InlineToken(TokenType.TEXT, "example"),
+        InlineToken(TokenType.LINK_CLOSE, "https://example.com"),
+    ]
+
+
+def test_tokenize_link_with_spaces():
+    result = tokenize("[hello world](https://example.com)")
+
+    assert result == [
+        InlineToken(TokenType.LINK_OPEN),
+        InlineToken(TokenType.TEXT, "hello world"),
+        InlineToken(TokenType.LINK_CLOSE, "https://example.com"),
+    ]
+
+
+def test_tokenize_text_with_link():
+    result = tokenize("Visit [example](https://example.com)")
+
+    assert result == [
+        InlineToken(TokenType.TEXT, "Visit "),
+        InlineToken(TokenType.LINK_OPEN),
+        InlineToken(TokenType.TEXT, "example"),
+        InlineToken(TokenType.LINK_CLOSE, "https://example.com"),
+    ]
+
+
+def test_tokenize_invalid_link_as_text():
+    result = tokenize("[example](https://example.com")
+
+    assert result == [
+        InlineToken(TokenType.TEXT, "[example](https://example.com"),
+    ]
