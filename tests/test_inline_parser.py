@@ -363,3 +363,71 @@ def test_parse_link_with_mixed_children():
     assert link.children[0].text == "hello "
 
     assert isinstance(link.children[1], Strong)
+
+
+def test_parse_nested_emphasis_inside_strong():
+    result = parse_inline("**bold *italic***")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Strong)
+
+    strong = result[0]
+
+    assert len(strong.children) == 2
+
+    assert isinstance(strong.children[0], Text)
+    assert strong.children[0].text == "bold "
+
+    assert isinstance(strong.children[1], Emphasis)
+
+    emphasis = strong.children[1]
+
+    assert len(emphasis.children) == 1
+    assert isinstance(emphasis.children[0], Text)
+    assert emphasis.children[0].text == "italic"
+
+
+def test_parse_nested_strong_inside_emphasis():
+    result = parse_inline("*italic **bold***")
+
+    assert len(result) == 1
+    assert isinstance(result[0], Emphasis)
+
+    emphasis = result[0]
+
+    assert len(emphasis.children) == 2
+
+    assert isinstance(emphasis.children[0], Text)
+    assert emphasis.children[0].text == "italic "
+
+    assert isinstance(emphasis.children[1], Strong)
+
+    strong = emphasis.children[1]
+
+    assert len(strong.children) == 1
+    assert isinstance(strong.children[0], Text)
+    assert strong.children[0].text == "bold"
+
+
+def test_find_matching_marker_for_strong():
+    from mdfix.inline_parser import find_matching_marker
+
+    text = "**bold**"
+
+    assert find_matching_marker(text, 0, "**") == 6
+
+
+def test_find_matching_marker_for_nested_emphasis():
+    from mdfix.inline_parser import find_matching_marker
+
+    text = "**bold *italic***"
+
+    assert find_matching_marker(text, 0, "**") == 15
+
+
+def test_find_matching_marker_for_nested_strong():
+    from mdfix.inline_parser import find_matching_marker
+
+    text = "*italic **bold***"
+
+    assert find_matching_marker(text, 0, "*") == 16

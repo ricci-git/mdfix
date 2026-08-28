@@ -34,15 +34,75 @@ def find_link(text: str) -> tuple[int, int, str, str] | None:
 
 
 def find_marker(text: str) -> tuple[str, type[InlineElement]] | None:
-    for candidate, cls in (
+    markers = (
         ("**", Strong),
         ("__", Strong),
         ("*", Emphasis),
         ("_", Emphasis),
         ("`", InlineCode),
-    ):
-        if candidate in text:
-            return candidate, cls
+    )
+
+    found: list[tuple[int, str, type[InlineElement]]] = []
+
+    for marker, cls in markers:
+        position = text.find(marker)
+
+        if position != -1:
+            found.append((position, marker, cls))
+
+    if not found:
+        return None
+
+    _, marker, cls = min(found, key=lambda item: item[0])
+
+    return marker, cls
+
+
+def find_matching_marker(
+    text: str,
+    start: int,
+    marker: str,
+) -> int | None:
+    position = start + len(marker)
+    nested = 0
+
+    while position < len(text):
+        if marker == "**":
+            if text.startswith("***", position):
+                position += 1
+                continue
+
+            if text.startswith("**", position):
+                return position
+
+            position += 1
+            continue
+
+        if marker == "*":
+            if text.startswith("***", position) and nested > 0:
+                nested -= 1
+                position += 2
+                continue
+
+            if text.startswith("**", position):
+                nested += 1
+                position += 2
+                continue
+
+            if text.startswith("*", position):
+                if nested > 0:
+                    position += 1
+                    continue
+
+                return position
+
+            position += 1
+            continue
+
+        if text.startswith(marker, position):
+            return position
+
+        position += 1
 
     return None
 
@@ -67,9 +127,7 @@ def create_inline_element(
         )
 
     return element_type(
-        children=[
-            Text(content),
-        ],
+        children=parse_inline(content),
     )
 
 
@@ -110,9 +168,9 @@ def parse_inline(text: str) -> list[InlineElement]:
 
     start = text.find(marker)
 
-    end = text.find(marker, start + len(marker))
+    end = find_matching_marker(text, start, marker)
 
-    if end == -1:
+    if end is None:
         return [Text(text)]
 
     content = text[start + len(marker):end]
