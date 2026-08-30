@@ -77,3 +77,13 @@ def test_tokenize_invalid_link_as_text():
     assert result == [
         InlineToken(TokenType.TEXT, "[example](https://example.com"),
     ]
+
+
+def test_tokenize_strong_with_underscores():
+    result = tokenize("__hello__")
+
+    assert result == [
+        InlineToken(TokenType.STRONG_OPEN),
+        InlineToken(TokenType.TEXT, "hello"),
+        InlineToken(TokenType.STRONG_CLOSE),
+    ]

@@ -35,6 +35,10 @@ def tokenize(text: str) -> list[InlineToken]:
             TokenType.STRONG_OPEN,
             TokenType.STRONG_CLOSE,
         ),
+        "__": (
+            TokenType.STRONG_OPEN,
+            TokenType.STRONG_CLOSE,
+        ),
         "*": (
             TokenType.EMPHASIS_OPEN,
             TokenType.EMPHASIS_CLOSE,
