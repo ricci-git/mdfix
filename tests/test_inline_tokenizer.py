@@ -87,3 +87,13 @@ def test_tokenize_strong_with_underscores():
         InlineToken(TokenType.TEXT, "hello"),
         InlineToken(TokenType.STRONG_CLOSE),
     ]
+
+
+def test_tokenize_emphasis_with_underscores():
+    result = tokenize("_hello_")
+
+    assert result == [
+        InlineToken(TokenType.EMPHASIS_OPEN),
+        InlineToken(TokenType.TEXT, "hello"),
+        InlineToken(TokenType.EMPHASIS_CLOSE),
+    ]

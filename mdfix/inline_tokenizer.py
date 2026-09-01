@@ -43,6 +43,10 @@ def tokenize(text: str) -> list[InlineToken]:
             TokenType.EMPHASIS_OPEN,
             TokenType.EMPHASIS_CLOSE,
         ),
+        "_": (
+            TokenType.EMPHASIS_OPEN,
+            TokenType.EMPHASIS_CLOSE,
+        ),
         "`": (
             TokenType.CODE_OPEN,
             TokenType.CODE_CLOSE,
