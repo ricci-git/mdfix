@@ -97,3 +97,59 @@ def test_tokenize_emphasis_with_underscores():
         InlineToken(TokenType.TEXT, "hello"),
         InlineToken(TokenType.EMPHASIS_CLOSE),
     ]
+
+
+def test_tokenize_sequential_inline_elements():
+    result = tokenize("**bold** _italic_")
+
+    assert result == [
+        InlineToken(TokenType.STRONG_OPEN),
+        InlineToken(TokenType.TEXT, "bold"),
+        InlineToken(TokenType.STRONG_CLOSE),
+        InlineToken(TokenType.TEXT, " "),
+        InlineToken(TokenType.EMPHASIS_OPEN),
+        InlineToken(TokenType.TEXT, "italic"),
+        InlineToken(TokenType.EMPHASIS_CLOSE),
+    ]
+
+
+def test_tokenize_nested_strong_and_emphasis():
+    result = tokenize("**bold *italic***")
+
+    assert result == [
+        InlineToken(TokenType.STRONG_OPEN),
+        InlineToken(TokenType.TEXT, "bold "),
+        InlineToken(TokenType.EMPHASIS_OPEN),
+        InlineToken(TokenType.TEXT, "italic"),
+        InlineToken(TokenType.EMPHASIS_CLOSE),
+        InlineToken(TokenType.STRONG_CLOSE),
+    ]
+
+
+def test_tokenize_nested_emphasis_and_strong():
+    result = tokenize("*italic **bold***")
+
+    assert result == [
+        InlineToken(TokenType.EMPHASIS_OPEN),
+        InlineToken(TokenType.TEXT, "italic "),
+        InlineToken(TokenType.STRONG_OPEN),
+        InlineToken(TokenType.TEXT, "bold"),
+        InlineToken(TokenType.STRONG_CLOSE),
+        InlineToken(TokenType.EMPHASIS_CLOSE),
+    ]
+
+
+def test_find_matching_marker_for_nested_strong():
+    from mdfix.inline_tokenizer import find_matching_marker
+
+    text = "**bold *italic***"
+
+    assert find_matching_marker(text, 0, "**") == 15
+
+
+def test_find_matching_marker_for_nested_emphasis():
+    from mdfix.inline_tokenizer import find_matching_marker
+
+    text = "*italic **bold***"
+
+    assert find_matching_marker(text, 0, "*") == 16

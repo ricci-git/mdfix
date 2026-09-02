@@ -24,6 +24,55 @@ def _find_link(
     return start, url_end, label, url
 
 
+def find_matching_marker(
+    text: str,
+    start: int,
+    marker: str,
+) -> int | None:
+    position = start + len(marker)
+    nested = 0
+
+    while position < len(text):
+        if marker == "**":
+            if text.startswith("***", position):
+                position += 1
+                continue
+
+            if text.startswith("**", position):
+                return position
+
+            position += 1
+            continue
+
+        if marker == "*":
+            if text.startswith("***", position) and nested > 0:
+                nested -= 1
+                position += 2
+                continue
+
+            if text.startswith("**", position):
+                nested += 1
+                position += 2
+                continue
+
+            if text.startswith("*", position):
+                if nested > 0:
+                    position += 1
+                    continue
+
+                return position
+
+            position += 1
+            continue
+
+        if text.startswith(marker, position):
+            return position
+
+        position += 1
+
+    return None
+
+
 def tokenize(text: str) -> list[InlineToken]:
     if not text:
         return []
@@ -116,19 +165,19 @@ def tokenize(text: str) -> list[InlineToken]:
 
         tokens.append(InlineToken(open_type))
 
-        close_position = text.find(
+        close_position = find_matching_marker(
+            text,
+            position,
             marker,
-            position + len(marker),
         )
 
-        if close_position == -1:
+        if close_position is None:
             return [InlineToken(TokenType.TEXT, text)]
 
         if close_position > position + len(marker):
-            tokens.append(
-                InlineToken(
-                    TokenType.TEXT,
-                    text[position + len(marker):close_position],
+            tokens.extend(
+                tokenize(
+                    text[position + len(marker):close_position]
                 )
             )
 
