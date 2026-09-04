@@ -431,3 +431,22 @@ def test_find_matching_marker_for_nested_strong():
     text = "*italic **bold***"
 
     assert find_matching_marker(text, 0, "*") == 16
+
+
+def test_parse_nested_strong_and_emphasis():
+    result = parse_inline("**bold *italic***")
+
+    assert len(result) == 1
+
+    strong = result[0]
+
+    assert isinstance(strong, Strong)
+    assert len(strong.children) == 2
+
+    assert isinstance(strong.children[0], Text)
+    assert strong.children[0].text == "bold "
+
+    assert isinstance(strong.children[1], Emphasis)
+    assert len(strong.children[1].children) == 1
+    assert isinstance(strong.children[1].children[0], Text)
+    assert strong.children[1].children[0].text == "italic"
