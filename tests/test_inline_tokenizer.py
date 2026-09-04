@@ -153,3 +153,18 @@ def test_find_matching_marker_for_nested_emphasis():
     text = "*italic **bold***"
 
     assert find_matching_marker(text, 0, "*") == 16
+
+
+def test_tokenize_link_with_nested_strong():
+    result = tokenize("[**bold**](https://example.com)")
+
+    assert result == [
+        InlineToken(TokenType.LINK_OPEN),
+        InlineToken(TokenType.STRONG_OPEN),
+        InlineToken(TokenType.TEXT, "bold"),
+        InlineToken(TokenType.STRONG_CLOSE),
+        InlineToken(
+            TokenType.LINK_CLOSE,
+            "https://example.com",
+        ),
+    ]

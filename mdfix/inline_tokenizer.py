@@ -124,12 +124,7 @@ def tokenize(text: str) -> list[InlineToken]:
                     InlineToken(TokenType.LINK_OPEN)
                 )
 
-                tokens.append(
-                    InlineToken(
-                        TokenType.TEXT,
-                        label,
-                    )
-                )
+                tokens.extend(tokenize(label))
 
                 tokens.append(
                     InlineToken(
