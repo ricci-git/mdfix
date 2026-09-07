@@ -46,7 +46,11 @@ def test_tokenize_link():
     assert result == [
         InlineToken(TokenType.LINK_OPEN),
         InlineToken(TokenType.TEXT, "example"),
-        InlineToken(TokenType.LINK_CLOSE, "https://example.com"),
+        InlineToken(
+            TokenType.LINK_DESTINATION,
+            "https://example.com",
+        ),
+        InlineToken(TokenType.LINK_CLOSE),
     ]
 
 
@@ -56,7 +60,11 @@ def test_tokenize_link_with_spaces():
     assert result == [
         InlineToken(TokenType.LINK_OPEN),
         InlineToken(TokenType.TEXT, "hello world"),
-        InlineToken(TokenType.LINK_CLOSE, "https://example.com"),
+        InlineToken(
+            TokenType.LINK_DESTINATION,
+            "https://example.com",
+        ),
+        InlineToken(TokenType.LINK_CLOSE),
     ]
 
 
@@ -67,7 +75,11 @@ def test_tokenize_text_with_link():
         InlineToken(TokenType.TEXT, "Visit "),
         InlineToken(TokenType.LINK_OPEN),
         InlineToken(TokenType.TEXT, "example"),
-        InlineToken(TokenType.LINK_CLOSE, "https://example.com"),
+        InlineToken(
+            TokenType.LINK_DESTINATION,
+            "https://example.com",
+        ),
+        InlineToken(TokenType.LINK_CLOSE),
     ]
 
 
@@ -164,7 +176,19 @@ def test_tokenize_link_with_nested_strong():
         InlineToken(TokenType.TEXT, "bold"),
         InlineToken(TokenType.STRONG_CLOSE),
         InlineToken(
-            TokenType.LINK_CLOSE,
+            TokenType.LINK_DESTINATION,
             "https://example.com",
         ),
+        InlineToken(TokenType.LINK_CLOSE),
+    ]
+
+
+def test_tokenize_link_with_destination_token():
+    result = tokenize("[link](https://example.com)")
+
+    assert result == [
+        InlineToken(TokenType.LINK_OPEN),
+        InlineToken(TokenType.TEXT, "link"),
+        InlineToken(TokenType.LINK_DESTINATION, "https://example.com"),
+        InlineToken(TokenType.LINK_CLOSE),
     ]

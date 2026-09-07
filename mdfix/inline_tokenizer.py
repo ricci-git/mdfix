@@ -128,9 +128,13 @@ def tokenize(text: str) -> list[InlineToken]:
 
                 tokens.append(
                     InlineToken(
-                        TokenType.LINK_CLOSE,
+                        TokenType.LINK_DESTINATION,
                         url,
                     )
+                )
+
+                tokens.append(
+                    InlineToken(TokenType.LINK_CLOSE)
                 )
 
                 position = end + 1
