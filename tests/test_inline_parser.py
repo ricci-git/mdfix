@@ -5,7 +5,11 @@ from mdfix.inline_elements import (
     Strong,
     Text,
 )
-from mdfix.inline_parser import parse_inline
+from mdfix.inline_parser import (
+    parse_inline,
+    parse_tokens,
+)
+from mdfix.inline_tokenizer import tokenize
 
 
 def test_parse_plain_text():
@@ -450,3 +454,133 @@ def test_parse_nested_strong_and_emphasis():
     assert len(strong.children[1].children) == 1
     assert isinstance(strong.children[1].children[0], Text)
     assert strong.children[1].children[0].text == "italic"
+
+
+def test_parse_tokens_nested_strong_and_emphasis():
+    tokens = tokenize("**bold *italic***")
+
+    result = parse_tokens(tokens)
+
+    assert len(result) == 1
+
+    strong = result[0]
+
+    assert isinstance(strong, Strong)
+    assert len(strong.children) == 2
+
+    assert isinstance(strong.children[0], Text)
+    assert strong.children[0].text == "bold "
+
+    assert isinstance(strong.children[1], Emphasis)
+    assert len(strong.children[1].children) == 1
+    assert isinstance(strong.children[1].children[0], Text)
+    assert strong.children[1].children[0].text == "italic"
+
+
+def test_parse_tokens_sequential_inline_elements():
+    tokens = tokenize("**bold** _italic_")
+
+    result = parse_tokens(tokens)
+
+    assert len(result) == 3
+
+    assert isinstance(result[0], Strong)
+    assert len(result[0].children) == 1
+    assert isinstance(result[0].children[0], Text)
+    assert result[0].children[0].text == "bold"
+
+    assert isinstance(result[1], Text)
+    assert result[1].text == " "
+
+    assert isinstance(result[2], Emphasis)
+    assert len(result[2].children) == 1
+    assert isinstance(result[2].children[0], Text)
+    assert result[2].children[0].text == "italic"
+
+
+def test_parse_tokens_plain_text():
+    tokens = tokenize("hello world")
+
+    result = parse_tokens(tokens)
+
+    assert len(result) == 1
+    assert isinstance(result[0], Text)
+    assert result[0].text == "hello world"
+
+
+def test_parse_tokens_inline_code():
+    tokens = tokenize("`code`")
+
+    result = parse_tokens(tokens)
+
+    assert len(result) == 1
+    assert isinstance(result[0], InlineCode)
+    assert result[0].code == "code"
+
+
+def test_parse_tokens_link():
+    tokens = tokenize("[example](https://example.com)")
+
+    result = parse_tokens(tokens)
+
+    assert len(result) == 1
+
+    link = result[0]
+
+    assert isinstance(link, Link)
+    assert link.url == "https://example.com"
+    assert len(link.children) == 1
+    assert isinstance(link.children[0], Text)
+    assert link.children[0].text == "example"
+
+
+def test_parse_tokens_link_with_nested_strong():
+    tokens = tokenize("[**bold**](https://example.com)")
+
+    result = parse_tokens(tokens)
+
+    assert len(result) == 1
+
+    link = result[0]
+
+    assert isinstance(link, Link)
+    assert link.url == "https://example.com"
+    assert len(link.children) == 1
+
+    strong = link.children[0]
+
+    assert isinstance(strong, Strong)
+    assert len(strong.children) == 1
+    assert isinstance(strong.children[0], Text)
+    assert strong.children[0].text == "bold"
+
+
+def test_parse_inline_uses_token_parser():
+    result = parse_inline("**bold *italic***")
+
+    assert len(result) == 1
+
+    strong = result[0]
+
+    assert isinstance(strong, Strong)
+    assert len(strong.children) == 2
+
+    assert isinstance(strong.children[0], Text)
+    assert strong.children[0].text == "bold "
+
+    emphasis = strong.children[1]
+
+    assert isinstance(emphasis, Emphasis)
+    assert len(emphasis.children) == 1
+    assert isinstance(emphasis.children[0], Text)
+    assert emphasis.children[0].text == "italic"
+
+
+def test_parse_tokens_empty_strong():
+    tokens = tokenize("****")
+
+    result = parse_tokens(tokens)
+
+    assert len(result) == 1
+    assert isinstance(result[0], Text)
+    assert result[0].text == "****"

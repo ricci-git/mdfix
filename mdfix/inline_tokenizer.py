@@ -173,6 +173,9 @@ def tokenize(text: str) -> list[InlineToken]:
         if close_position is None:
             return [InlineToken(TokenType.TEXT, text)]
 
+        if close_position == position + len(marker):
+            return [InlineToken(TokenType.TEXT, text)]
+
         if close_position > position + len(marker):
             tokens.extend(
                 tokenize(

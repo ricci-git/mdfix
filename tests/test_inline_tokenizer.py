@@ -192,3 +192,27 @@ def test_tokenize_link_with_destination_token():
         InlineToken(TokenType.LINK_DESTINATION, "https://example.com"),
         InlineToken(TokenType.LINK_CLOSE),
     ]
+
+
+def test_tokenize_empty_strong_as_text():
+    result = tokenize("****")
+
+    assert result == [
+        InlineToken(TokenType.TEXT, "****"),
+    ]
+
+
+def test_tokenize_empty_strong_underscore_as_text():
+    result = tokenize("____")
+
+    assert result == [
+        InlineToken(TokenType.TEXT, "____"),
+    ]
+
+
+def test_tokenize_empty_inline_code_as_text():
+    result = tokenize("``")
+
+    assert result == [
+        InlineToken(TokenType.TEXT, "``"),
+    ]
