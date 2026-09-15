@@ -413,30 +413,6 @@ def test_parse_nested_strong_inside_emphasis():
     assert strong.children[0].text == "bold"
 
 
-def test_find_matching_marker_for_strong():
-    from mdfix.inline_parser import find_matching_marker
-
-    text = "**bold**"
-
-    assert find_matching_marker(text, 0, "**") == 6
-
-
-def test_find_matching_marker_for_nested_emphasis():
-    from mdfix.inline_parser import find_matching_marker
-
-    text = "**bold *italic***"
-
-    assert find_matching_marker(text, 0, "**") == 15
-
-
-def test_find_matching_marker_for_nested_strong():
-    from mdfix.inline_parser import find_matching_marker
-
-    text = "*italic **bold***"
-
-    assert find_matching_marker(text, 0, "*") == 16
-
-
 def test_parse_nested_strong_and_emphasis():
     result = parse_inline("**bold *italic***")
 

@@ -1,4 +1,7 @@
-from mdfix.inline_tokenizer import tokenize
+from mdfix.inline_tokenizer import (
+    find_matching_marker,
+    tokenize,
+)
 from mdfix.inline_tokens import InlineToken, TokenType
 
 
@@ -152,7 +155,6 @@ def test_tokenize_nested_emphasis_and_strong():
 
 
 def test_find_matching_marker_for_nested_strong():
-    from mdfix.inline_tokenizer import find_matching_marker
 
     text = "**bold *italic***"
 
@@ -160,11 +162,17 @@ def test_find_matching_marker_for_nested_strong():
 
 
 def test_find_matching_marker_for_nested_emphasis():
-    from mdfix.inline_tokenizer import find_matching_marker
 
     text = "*italic **bold***"
 
     assert find_matching_marker(text, 0, "*") == 16
+
+
+def test_find_matching_marker_for_strong():
+
+    text = "**bold**"
+
+    assert find_matching_marker(text, 0, "**") == 6
 
 
 def test_tokenize_link_with_nested_strong():
