@@ -224,3 +224,17 @@ def test_tokenize_empty_inline_code_as_text():
     assert result == [
         InlineToken(TokenType.TEXT, "``"),
     ]
+
+
+def test_tokenize_nested_strong_in_emphasis():
+    tokens = tokenize("*italic **bold** text*")
+
+    assert tokens == [
+        InlineToken(TokenType.EMPHASIS_OPEN),
+        InlineToken(TokenType.TEXT, "italic "),
+        InlineToken(TokenType.STRONG_OPEN),
+        InlineToken(TokenType.TEXT, "bold"),
+        InlineToken(TokenType.STRONG_CLOSE),
+        InlineToken(TokenType.TEXT, " text"),
+        InlineToken(TokenType.EMPHASIS_CLOSE),
+    ]

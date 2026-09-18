@@ -51,7 +51,10 @@ def find_matching_marker(
                 continue
 
             if text.startswith("**", position):
-                nested += 1
+                if nested > 0:
+                    nested -= 1
+                else:
+                    nested += 1
                 position += 2
                 continue
 

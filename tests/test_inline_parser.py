@@ -560,3 +560,39 @@ def test_parse_tokens_empty_strong():
     assert len(result) == 1
     assert isinstance(result[0], Text)
     assert result[0].text == "****"
+
+
+def test_parse_nested_emphasis_with_text_after():
+    result = parse_inline("**bold *italic* text**")
+
+    assert result == [
+        Strong(
+            children=[
+                Text(text="bold "),
+                Emphasis(
+                    children=[
+                        Text(text="italic"),
+                    ]
+                ),
+                Text(text=" text"),
+            ]
+        )
+    ]
+
+
+def test_parse_nested_strong_with_text_after():
+    result = parse_inline("*italic **bold** text*")
+
+    assert result == [
+        Emphasis(
+            children=[
+                Text(text="italic "),
+                Strong(
+                    children=[
+                        Text(text="bold"),
+                    ]
+                ),
+                Text(text=" text"),
+            ]
+        )
+    ]
