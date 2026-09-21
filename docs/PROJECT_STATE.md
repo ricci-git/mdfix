@@ -20,7 +20,7 @@ master
 
 Latest Commit:
 
-f134085
+931c316
 
 Latest Tag:
 
@@ -38,7 +38,7 @@ clean
 
 pytest:
 
-96 passed
+118 passed
 
 ruff:
 
@@ -243,12 +243,23 @@ Recursive Inline Parsing
 
 Implemented:
 
-- recursive inline parsing from the tokenizer layer
-- nested Strong and Emphasis structures
-- nested inline structures where supported by the parser
-- recursive child construction
-- preservation of the existing Inline AST model
-- regression coverage for recursive parsing
+- Inline Tokenizer integration
+- Inline Token Stream
+- recursive inline parser
+- nested inline token parsing
+- nested inline content inside links
+- underscore Strong tokens
+- underscore Emphasis tokens
+- parser migration from direct text matching to token stream
+- removal of obsolete inline parser helpers
+- nested Strong inside Emphasis
+- regression test coverage for nested inline parsing
+
+Validation:
+
+- 118 tests passed
+- ruff passed
+- git diff --check passed
 
 Current implementation:
 
