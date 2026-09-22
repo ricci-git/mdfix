@@ -20,11 +20,11 @@ master
 
 Latest Commit:
 
-931c316
+c479bd1
 
 Latest Tag:
 
-v0.8.1
+v0.8.2
 
 Remote:
 

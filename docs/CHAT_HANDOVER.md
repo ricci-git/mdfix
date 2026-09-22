@@ -7,30 +7,63 @@ Purpose:
 Markdown parser and automatic fixer.
 
 Current focus:
-Inline AST parser development.
+Inline parsing architecture completed.
 
 Current milestone:
-v0.7.2 completed.
+v0.8.2 completed.
 
-Continue from:
-v0.7.3 Emphasis Inline Parsing.
+Current architecture:
 
+```text
+Markdown
+    |
+    v
+Block Parser
+    |
+    v
+Block AST
+    |
+    v
+Inline Tokenizer
+    |
+    v
+Inline Token Stream
+    |
+    v
+Recursive Inline Parser
+    |
+    v
+Inline AST
+```
 
 Important context:
 
 - Use Ukrainian for explanations.
-- Keep English technical terms unchanged.
-- Work step-by-step.
-- Use TDD.
-- Do not skip tests.
-- Keep commits small.
-- Every feature gets its own version tag.
+Keep English technical terms unchanged.
+Work step-by-step.
+Use TDD.
+Do not skip tests.
+Keep commits small.
+Every feature gets its own version tag.
+Do not start a new feature before the next milestone is defined.
 
+Current validation:
 
-First action:
+118 tests passed
+ruff passed
+git diff --check passed
 
-Review:
-- docs/PROJECT_STATE.md
+Current repository state:
 
-Then start:
-v0.7.3 implementation.
+Branch: master
+Latest commit: c479bd1
+Latest tag: v0.8.2
+Remote: origin/master
+
+Next step:
+
+Review the current architecture and documentation.
+
+Determine the next development problem and milestone before starting implementation.
+
+Do not write code until the next milestone is agreed.
