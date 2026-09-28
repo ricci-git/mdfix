@@ -596,3 +596,42 @@ def test_parse_nested_strong_with_text_after():
             ]
         )
     ]
+
+
+def test_parse_tokens_sequential_inline_elements_with_text():
+    tokens = tokenize("**one** and *two*")
+
+    result = parse_tokens(tokens)
+
+    assert result == [
+        Strong(
+            children=[
+                Text(text="one"),
+            ]
+        ),
+        Text(text=" and "),
+        Emphasis(
+            children=[
+                Text(text="two"),
+            ]
+        ),
+    ]
+
+
+def test_parse_tokens_adjacent_inline_elements():
+    tokens = tokenize("**one***two*")
+
+    result = parse_tokens(tokens)
+
+    assert result == [
+        Strong(
+            children=[
+                Text(text="one"),
+            ]
+        ),
+        Emphasis(
+            children=[
+                Text(text="two"),
+            ]
+        ),
+    ]

@@ -35,11 +35,20 @@ def find_matching_marker(
     while position < len(text):
         if marker == "**":
             if text.startswith("***", position):
-                position += 1
-                continue
+                if nested > 0:
+                    position += 1
+                    nested -= 1
+                    continue
+
+                return position
 
             if text.startswith("**", position):
                 return position
+
+            if text.startswith("*", position):
+                nested += 1
+                position += 1
+                continue
 
             position += 1
             continue

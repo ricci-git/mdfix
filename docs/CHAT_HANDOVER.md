@@ -7,10 +7,10 @@ Purpose:
 Markdown parser and automatic fixer.
 
 Current focus:
-Inline parsing architecture completed.
+Sequential Inline Elements milestone completed.
 
 Current milestone:
-v0.8.2 completed.
+v0.8.3 completed.
 
 Current architecture:
 
@@ -49,7 +49,7 @@ Do not start a new feature before the next milestone is defined.
 
 Current validation:
 
-118 tests passed
+122 tests passed
 ruff passed
 git diff --check passed
 

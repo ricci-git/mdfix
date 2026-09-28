@@ -238,3 +238,22 @@ def test_tokenize_nested_strong_in_emphasis():
         InlineToken(TokenType.TEXT, " text"),
         InlineToken(TokenType.EMPHASIS_CLOSE),
     ]
+
+
+def test_tokenize_adjacent_inline_elements():
+    tokens = tokenize("**one***two*")
+
+    assert tokens == [
+        InlineToken(TokenType.STRONG_OPEN),
+        InlineToken(TokenType.TEXT, "one"),
+        InlineToken(TokenType.STRONG_CLOSE),
+        InlineToken(TokenType.EMPHASIS_OPEN),
+        InlineToken(TokenType.TEXT, "two"),
+        InlineToken(TokenType.EMPHASIS_CLOSE),
+    ]
+
+
+def test_find_matching_marker_for_adjacent_emphasis():
+    text = "**one***two*"
+
+    assert find_matching_marker(text, 7, "*") == 11

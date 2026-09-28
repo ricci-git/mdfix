@@ -2,7 +2,7 @@
 
 ## Current Version
 
-Version: v0.8.2
+Version: v0.8.3
 
 Status:
 
@@ -10,7 +10,7 @@ Stable
 
 Last Completed:
 
-Recursive Inline Parsing
+Sequential Inline Elements
 
 ## Repository State
 
@@ -24,7 +24,7 @@ c479bd1
 
 Latest Tag:
 
-v0.8.2
+v0.8.3
 
 Remote:
 
@@ -38,7 +38,7 @@ clean
 
 pytest:
 
-118 passed
+122 passed
 
 ruff:
 
@@ -281,6 +281,24 @@ Inline AST
 
 The recursive parser replaces the previous single-match parsing approach.
 
+### v0.8.3
+
+Sequential Inline Elements
+
+Implemented:
+
+- sequential inline elements
+- preservation of source order
+- text between inline elements
+- adjacent inline elements
+- regression test coverage for sequential inline parsing
+
+Validation:
+
+- 122 tests passed
+- ruff passed
+- git diff --check passed
+
 ## Current Inline AST
 
 Supported elements:
@@ -416,23 +434,6 @@ Goal:
 Complete the transition to a tokenizer-based recursive inline parser while preserving the existing Inline AST model and current behavior.
 
 - **Planned Subversions**
-
-- **v0.8.3**
-
-Sequential Inline Elements
-
-Goal:
-
-Support multiple inline structures within the same text.
-
-Examples:
-
-```markdonw
-**one** and *two*
-Hello `code` and [link](https://example.com)
-```
-
-The parser must preserve element order.
 
 - **v0.8.4**
 
