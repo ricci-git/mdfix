@@ -1,530 +1,223 @@
-# mdfix Project State
+---
+Title: "Стан проєкту mdfix"
+Code: "PS-MDFIX-001"
+Version: "2.1"
+Status: "approved"
+Description: "Актуальний архітектурний стан, досягнуті результати, технічний борг та дорожня карта розвитку."
+Owner: "Ricci"
+Layer: "Application"
+Type: "Report"
+Document Class: "Internal"
+Audience: "Developers, Maintainers"
+Canonical Language: uk
+Translations: en
+Created: 2026-08-02
+Last Updated: 2026-10-07
+Reviewers: ["AI Assistant"]
+Approved By: ["Ricci"]
+Related Documents: ["proposal-2026-10-07.md", "INLINE_AST_DESIGN.md", "CHAT_HANDOVER.md"]
+Related ADRs: ["DESIGN-001"]
+---
 
-## Current Version
+## Стан проєкту mdfix
 
-Version: v0.8.3
+## 0. Поточні пріоритети (Milestone 0: Repo Hygiene)
 
-Status:
+На даний момент фокус зміщено з функціональної розробки парсера на стабілізацію інфраструктури репозиторію. Без цього подальший розвиток ризикований через неузгодженість метаданих та шум у результатах аналізу.
 
-Stable
+### 0.1 Технічний борг (To Do)
 
-Last Completed:
+1. **Синхронізація версій:** Версія в `pyproject.toml` (0.1.0) не відповідає `mdfix/version.py` (0.8.3). Необхідно налаштувати динамічне читання версії або синхронізувати вручну.
+2. **Виключення сканера:** `mdfix/scanner.py` включає `.pytest_cache` та `__pycache__` у результати пошуку. Необхідно додати ці директорії до `DEFAULT_EXCLUDES`.
+3. **Актуалізація README:** Файл `README.md` містить застарілу інформацію про кількість тестів та версію.
 
-Sequential Inline Elements
+### 0.2 Критерії завершення Milestone 0
 
-## Repository State
+* Усі тести проходять (`pytest`).
+* Лінер проходить (`ruff check .`).
+* `mdfix scan .` не показує файлів з кеш-директорій.
+* Метадані пакета (`pip show mdfix`) відповідають версії CLI.
+* Документація (`PROJECT_STATE.md`, `README.md`) актуалізована.
 
-Branch:
+---
 
-master
+## 1. Загальний стан
 
-Latest Commit:
+**Версія:** v0.8.3  
+**Статус:** Стабільний прототип парсингу.  
 
-c479bd1
+Проєкт має робочий конвеєр розбору Markdown: від блоків до вкладених inline-елементів через токенізатор. Однак система ще не здатна діагностувати помилки чи автоматично виправляти документи (це цілі Milestone 1+).
 
-Latest Tag:
+## 2. Архітектурний обзор
 
-v0.8.3
+### 2.1 Конвеєр обробки (Pipeline)
 
-Remote:
-
-origin/master
-
-Working Tree:
-
-clean
-
-## Validation
-
-pytest:
-
-122 passed
-
-ruff:
-
-passed
-
-git diff --check:
-
-passed
-
-## Architecture Progress
-
-Current pipeline:
-
-```text
-Markdown
-    |
-    v
-Block Parser
-    |
-    v
-Block AST
-    |
-    v
-Inline Tokenizer
-    |
-    v
-Inline Token Stream
-    |
-    v
-Recursive Inline Parser
-    |
-    v
-Inline AST
+```mermaid
+graph TD
+    A[Markdown File] --> B(Scanner)
+    B --> C{Block Parser}
+    C --> D[Block AST]
+    D --> E(Inline Tokenizer)
+    E --> F[Token Stream]
+    F --> G(Recursive Inline Parser)
+    G --> H[Inline AST]
+    
+    style H fill:#f9f,stroke:#333,stroke-width:2px
+    style D fill:#ccf,stroke:#333,stroke-width:2px
 ```
 
-Current Inline Parser architecture:
+### 2.2 Компоненти
 
-```text
-Markdown text
-    |
-    v
-Inline Tokenizer
-    |
-    v
-Token Stream
-    |
-    v
-Recursive Inline Parser
-    |
-    v
-Inline AST
-```
+1. **Scanner**: Рекурсивний пошук `.md` файлів. *Проблема:* Потребує фільтрації технічних папок (Task 0.1.2).
+2. **Block Parser**: Розпізнає заголовки, абзаци, списки, таблиці, код-блоки. Генерує `Block AST`.
+3. **Inline Tokenizer**: Лексичний аналіз рядка всередині блоку. Повертає потік токенів. Відокремлений від побудови дерева.
+4. **Recursive Inline Parser**: Побудова `Inline AST` з потоку токенів. Підтримує вкладеність (`**bold *italic***`) та послідовність елементів.
+5. **Table Formatter**: Існує окремим модулем (`table_formatter.py`). Має базові тести, але **не інтегрований** у загальний ланцюжок обробки документу.
 
-The inline parsing architecture has transitioned from single-match detection to a tokenizer-based recursive parser.
+## 3. Виконані віхи (History)
 
-The existing Inline AST model is preserved.
+| Версія | Назва | Основний результат |
+| ------ | ----- | ------------------ |
+| v0.7.0 | Inline AST Foundation | Моделі Text, Strong, Emphasis, Link, Code. Інтеграція в Paragraph. |
+| v0.7.1-v0.7.8 | Basic Inline Parsing | Послідовне додавання підтримки маркерів (`**`, `*`, ` `[]``()`), рефакторинг helper-функцій. |
+| v0.8.1 | Inline Tokenizer | Виділення лексичного шару. Токенізація без AST. |
+| v0.8.2 | Recursive Parsing | Перехід на рекурсивний парсер токенів. Підтримка глибокої вкладеності. |
+| v0.8.3 | Sequential Elements | Гарантія порядку слідування inline-елементів. Збереження тексту між ними. |
 
-## Completed Milestones
+## 4. Дорожня карта (Roadmap)
 
-### v0.7.0
+### Milestone 0: Гігієна репозиторію (Поточний етап)
 
-Inline AST Foundation
+* Синхронізація версій.
+* Фікс сканера.
+* Оновлення документації.
 
-Implemented:
+### Milestone 1: Ядро Діагностики (Linting Core)
 
-- InlineElement base class
-- Text
-- Strong
-- Emphasis
-- InlineCode
-- Link
-- Paragraph inline representation
-- Inline AST tests
+* Модель `Diagnostic` (dataclass/pydantic).
+* Rule Engine (реєстр правил, visitor pattern).
+* Інтеграція Inline AST у Block Parser (щоб правила бачили структуру тексту).
+* Перші правила: MD001 (Heading Skip), MD009 (Trailing Whitespace).
+* CLI команда `mdfix lint`.
 
-### v0.7.1
+### Milestone 2: Автофікси та Таблиці
 
-Inline Parser Contract
+* Механізм генерації Diff/Patch.
+* Інтеграція `table_formatter` у процес фіксації.
+* Команда `mdfix fix --dry-run`.
+* Правило форматування таблиць.
 
-Implemented:
+### Milestone 3: Стабілізація та Реліз MVP
 
-- parse_inline()
-- plain text parsing
-- empty input handling
-- initial parser contract
+* E2E тести CLI.
+* Повна документація користувача (RULES.md).
+* CI/CD пайплайн.
+* Реліз v1.0.0-beta.
 
-### v0.7.2
+## 5. Відомі обмеження (Known Limitations)
 
-Strong Inline Parsing
+* **Немає Linting:** Програма не може повідомити про помилки, тільки розібрати текст.
+* **Таблиці ізольовані:** Форматувальник таблиць не викликається автоматично при парсингу.
+* **Edge Cases:** Складні конструкції Markdown (footnotes, HTML-in-MD, complex escapes) можуть парситися некоректно або не підтримуватися поки що.
 
-Implemented:
+---
 
-- **strong**
-- `__strong__`
-- mixed text handling
-- invalid syntax handling
+## English Translation
 
-### v0.7.3
+## Project State of mdfix
 
-Emphasis Inline Parsing
+## 0. Current Priorities (Milestone 0: Repo Hygiene)
 
-Implemented:
+The focus has currently shifted from functional parser development to stabilizing the repository infrastructure. Without this, further development is risky due to inconsistent metadata and noise in analysis results.
 
-- *italic*
-- `_italic_`
-- mixed text handling
-- unclosed emphasis handling
-- empty emphasis handling
+### 0.1 Technical Debt (To Do)
 
-### v0.7.4
+1. **Version Synchronization:** The version in `pyproject.toml` (0.1.0) does not match `mdfix/version.py` (0.8.3). Dynamic version reading or manual synchronization is required.
+2. **Scanner Exclusions:** `mdfix/scanner.py` includes `.pytest_cache` and `__pycache__` in search results. These directories must be added to `DEFAULT_EXCLUDES`.
+3. **README Update:** The `README.md` file contains outdated information regarding test counts and versions.
 
-Inline Code Parsing
+### 0.2 Milestone 0 Completion Criteria
 
-Implemented:
+* All tests pass (`pytest`).
+* Linter passes (`ruff check .`).
+* `mdfix scan .` does not show files from cache directories.
+* Package metadata (`pip show mdfix`) matches the CLI version.
+* Documentation (`PROJECT_STATE.md`, `README.md`) is updated.
 
-- `code`
-- inline code within text
-- unclosed inline code handling
-- empty inline code handling
+---
 
-### v0.7.5
+## 1. General Status
 
-Link Parsing Support
+**Version:** v0.8.3  
+**Status:** Stable parsing prototype.  
 
-Implemented:
+The project has a working Markdown parsing pipeline: from blocks to nested inline elements via a tokenizer. However, the system is not yet capable of diagnosing errors or automatically fixing documents (these are goals for Milestone 1+).
 
-- [label](url)
-- links within surrounding text
-- empty label handling
-- empty URL handling
-- unclosed link handling
+## 2. Architectural Overview
 
-### v0.7.6
+### 2.1 Processing Pipeline
 
-Inline Parser Refactoring
+-*(Same diagram as above)*
 
-Implemented:
+### 2.2 Components
 
-- separated link detection
-- separated marker detection
-- inline element creation helper
-- link element creation helper
-- improved marker handling
-- regression coverage for nested inline cases
+1. **Scanner**: Recursive search for `.md` files. *Issue:* Needs filtering of technical folders (Task 0.1.2).
+2. **Block Parser**: Recognizes headings, paragraphs, lists, tables, code blocks. Generates `Block AST`.
+3. **Inline Tokenizer**: Lexical analysis of the string inside a block. Returns a token stream. Separated from tree building.
+4. **Recursive Inline Parser**: Building `Inline AST` from the token stream. Supports nesting (`**bold *italic***`) and element sequence.
+5. **Table Formatter**: Exists as a separate module (`table_formatter.py`). Has basic tests but is **not integrated** into the general document processing chain.
 
-### v0.7.7
+## 3. Completed Milestones (History)
 
-Recursive Link Children Parsing
+| Version | Name | Key Result |
+| ------- | ---- | ---------- |
+| v0.7.0 | Inline AST Foundation | Models for Text, Strong, Emphasis, Link, Code. Integration into Paragraph. |
+| v0.7.1-v0.7.8 | Basic Inline Parsing | Sequential addition of support for markers (`**`, `*`, ` `[]`,`()`), refactoring of helper functions. |
+| v0.8.1 | Inline Tokenizer | Extraction of the lexical layer. Tokenization without AST. |
+| v0.8.2 | Recursive Parsing | Transition to a recursive token parser. Support for deep nesting. |
+| v0.8.3 | Sequential Elements | Guarantee of inline element ordering. Preservation of text between them. |
 
-Implemented:
+## 4. Roadmap
 
-- inline parsing inside link labels
-- Strong children inside links
-- Emphasis children inside links
-- InlineCode children inside links
-- recursive construction of link children
+### Milestone 0: Repository Hygiene (Current Stage)
 
-This was limited recursive parsing for link labels.
+* Version synchronization.
+* Scanner fix.
+* Documentation update.
 
-It was not a general recursive inline parser.
+### Milestone 1: Diagnostics Core (Linting Core)
 
-### v0.7.8
+* `Diagnostic` model (dataclass/pydantic).
+* Rule Engine (rule registry, visitor pattern).
+* Integration of Inline AST into Block Parser (so rules can see text structure).
+* First rules: MD001 (Heading Skip), MD009 (Trailing Whitespace).
+* CLI command `mdfix lint`.
 
-Inline Parser Edge Cases
+### Milestone 2: Auto-fixes & Tables
 
-Implemented and validated:
+* Diff/Patch generation mechanism.
+* Integration of `table_formatter` into the fixing process.
+* Command `mdfix fix --dry-run`.
+* Table formatting rule.
 
-- unmatched Strong markers
-- unmatched Emphasis markers
-- link trailing text
-- mixed inline children inside links
-- additional inline parser regression coverage
+### Milestone 3: Stabilization & MVP Release
 
-Validation:
+* E2E CLI tests.
+* Full user documentation (RULES.md).
+* CI/CD pipeline.
+* Release v1.0.0-beta.
 
-- 79 tests passed
-- ruff passed
+## 5. Known Limitations
 
-### v0.8.1
+* **No Linting:** The program cannot report errors, only parse text.
+* **Isolated Tables:** The table formatter is not called automatically during parsing.
+* **Edge Cases:** Complex Markdown constructs (footnotes, HTML-in-MD, complex escapes) may be parsed incorrectly or unsupported for now.
 
-Inline Tokenizer Foundation
+---
+**Version History:**
 
-Implemented:
-
-- inline tokenizer module
-- inline token model
-- token types for inline syntax
-- source-order tokenization
-- tokenizer test coverage
-- inline token test coverage
-
-The tokenizer establishes a separate tokenization layer between Markdown text and inline AST construction.
-
-Validation:
-
-- 96 tests passed
-- ruff passed
-- git diff --check passed
-
-### v0.8.2
-
-Recursive Inline Parsing
-
-Implemented:
-
-- Inline Tokenizer integration
-- Inline Token Stream
-- recursive inline parser
-- nested inline token parsing
-- nested inline content inside links
-- underscore Strong tokens
-- underscore Emphasis tokens
-- parser migration from direct text matching to token stream
-- removal of obsolete inline parser helpers
-- nested Strong inside Emphasis
-- regression test coverage for nested inline parsing
-
-Validation:
-
-- 118 tests passed
-- ruff passed
-- git diff --check passed
-
-Current implementation:
-
-```text
-Markdown text
-    |
-    v
-Inline Tokenizer
-    |
-    v
-Inline Token Stream
-    |
-    v
-Recursive Inline Parser
-    |
-    v
-Inline AST
-```
-
-The recursive parser replaces the previous single-match parsing approach.
-
-### v0.8.3
-
-Sequential Inline Elements
-
-Implemented:
-
-- sequential inline elements
-- preservation of source order
-- text between inline elements
-- adjacent inline elements
-- regression test coverage for sequential inline parsing
-
-Validation:
-
-- 122 tests passed
-- ruff passed
-- git diff --check passed
-
-## Current Inline AST
-
-Supported elements:
-
-- Text
-- Strong
-- Emphasis
-- InlineCode
-- Link
-
-Examples:
-
-```markdown
-plain text
-Text("plain text")
-**important**
-Strong(
-    Text("important")
-)
-*note*
-Emphasis(
-    Text("note")
-)
-`python`
-InlineCode("python")
-[mdfix](https://example.com)
-Link(
-    children=[
-        Text("mdfix")
-    ],
-    url="https://example.com"
-)
-```
-
-Nested inline structures are supported:
-
-```markdown
-**bold *italic***
-Strong(
-    children=[
-        Text("bold "),
-        Emphasis(
-            children=[
-                Text("italic")
-            ]
-        )
-    ]
-)
-```
-
-The parser also supports recursive inline parsing inside link labels:
-
-```markdown
-[hello **world**](https://example.com)
-Link(
-    children=[
-        Text("hello "),
-        Strong(
-            children=[
-                Text("world")
-            ]
-        )
-    ],
-    url="https://example.com"
-)
-```
-
-## Current Architecture
-
-The parser is now divided into distinct responsibilities:
-
-- **Inline Tokenizer**
-
-Responsible for:
-
-- reading Markdown inline source;
-- recognizing inline syntax;
-- producing tokens;
-- preserving source order;
-- separating lexical recognition from AST construction.
-
-- **Inline Parser**
-
-Responsible for:
-
-- consuming the token stream;
-- recognizing structural relationships between tokens;
-- constructing Inline AST nodes;
-- recursively constructing child nodes;
-- preserving nesting and element order.
-
-- **Inline AST**
-
-Responsible for representing parsed inline structure:
-
-- Text
-- Strong
-- Emphasis
-- InlineCode
-- Link
-
-The tokenizer does not construct AST elements.
-
-The parser does not perform lexical tokenization directly.
-
-## Architectural Limitations
-
-The general recursive parsing architecture is now established, but the v0.8.x cycle is not yet complete.
-
-The following areas remain intentionally deferred:
-
-- complete sequential inline expression coverage;
-- broader mixed inline structure handling;
-- malformed syntax policy refinement;
-- parser cleanup;
-- regression suite consolidation;
-- final architecture stabilization.
-
-These areas define the remaining scope of the v0.8.x development cycle.
-
-## Next Development Cycle
-
-Version:
-
-v0.8.x
-
-Title:
-
-Recursive Inline Parser Architecture
-
-Goal:
-
-Complete the transition to a tokenizer-based recursive inline parser while preserving the existing Inline AST model and current behavior.
-
-- **Planned Subversions**
-
-- **v0.8.4**
-
-Mixed Structures and Edge Cases
-
-Goal:
-
-Expand parser behavior for combinations of supported inline elements and establish explicit handling of malformed syntax.
-
-Focus:
-
-- mixed nesting;
-- adjacent elements;
-- unmatched markers;
-- empty structures;
-- malformed links;
-- regression cases.
-
-- **v0.8.5**
-
-Parser Cleanup and Regression Suite
-
-Goal:
-
-Stabilize the parser implementation after the architectural transition.
-
-Focus:
-
-- remove obsolete parsing paths;
-- simplify parser responsibilities;
-- strengthen parser contracts;
-- consolidate regression tests;
-- verify backward compatibility.
-
-- **v0.8.6**
-
-Stabilization
-
-Goal:
-
-Finalize the v0.8.x recursive parser architecture and prepare the next stable development milestone.
-
-Validation:
-
-- complete test suite;
-- ruff;
-- regression verification;
-- documentation synchronization.
-
-## Development Rules
-
-Follow TDD:
-
-1. Add failing test
-2. Implement minimum code
-3. Run pytest
-4. Run ruff
-5. Commit
-6. Tag
-7. Push
-
-Architectural rules:
-
-- preserve the existing Inline AST model unless a concrete requirement requires change;
-- do not patch individual marker cases when the problem belongs to parser architecture;
-- separate tokenization from AST construction;
-- keep tokenizer and parser responsibilities distinct;
-- introduce no external dependencies;
-- maintain backward compatibility where practical;
-- do not optimize prematurely.
-
-Do not:
-
-- introduce dependencies;
-- mix tokenization and AST construction unnecessarily;
-- expand v0.8.x into rendering or formatting;
-- change unrelated Block AST behavior;
-- rewrite working components without a concrete architectural reason.
-
-## Documentation Rule
-
-`docs/PROJECT_STATE.md` is the operational source of truth for the current development state.
-
-Update it when:
-
-- a milestone is completed;
-- the current version changes;
-- repository state changes materially;
-- validation results establish a new baseline;
-- the next development target is defined.
-
-Architectural design documents should describe stable or intentionally adopted architecture.
-
-Do not modify architectural documentation merely to reflect an unverified implementation idea.
+| Version | Date       | Author      | Changes                                                                 |
+|---------|------------|-------------|-------------------------------------------------------------------------|
+| 2.1     | 2026-10-07 | Ricci/AI    | Added Milestone 0 priorities, standardized metadata, clarified roadmap. |
+| 2.0     | 2026-10-07 | Ricci       | Updated state for v0.8.3.                                               |
+| 1.0     | 2026-08-02 | Team        | Initial project state tracking.                                         |
