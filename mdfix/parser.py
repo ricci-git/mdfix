@@ -12,6 +12,7 @@ from .elements import (
     SourcePosition,
     Table,
 )
+from .inline_parser import parse_inline
 
 
 def heading_level(line: str) -> int | None:
@@ -155,17 +156,21 @@ def parse_elements(content: str) -> list[Element]:
 
     def flush_paragraph():
         nonlocal paragraph_lines, paragraph_start_line
-
         if paragraph_lines:
+            text_content = "\n".join(paragraph_lines)
+                
+            # NEW LOGIC: Parse inline structure
+            inline_nodes = parse_inline(text_content)
+                
             elements.append(
                 Paragraph(
-                    text="\n".join(paragraph_lines),
+                    text=text_content,
+                    inline=inline_nodes,  # Populate the field
                     position=SourcePosition(
                         line=paragraph_start_line,
                     ),
                 )
             )
-
             paragraph_lines = []
             paragraph_start_line = None
 
