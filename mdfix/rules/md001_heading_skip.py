@@ -1,5 +1,5 @@
-from mdfix.document import Document
 from mdfix.diagnostics import Diagnostic, Severity
+from mdfix.document import Document
 from mdfix.elements import Heading
 from mdfix.rules.base import Rule
 

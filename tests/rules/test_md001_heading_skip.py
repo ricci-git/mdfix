@@ -1,7 +1,8 @@
 from pathlib import Path
+
+from mdfix.diagnostics import Severity
 from mdfix.linter import Linter
 from mdfix.rules.md001_heading_skip import Md001HeadingSkipRule
-from mdfix.diagnostics import Severity
 
 
 def test_md001_detects_heading_level_skip(tmp_path: Path):
