@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mdfix"
-version = "0.1.0"
+version = "0.8.3"
 description = "Markdown formatter and documentation linter"
 requires-python = ">=3.12"
 
