@@ -1,5 +1,4 @@
 import tempfile
-
 from pathlib import Path
 
 from mdfix.models import MarkdownFile

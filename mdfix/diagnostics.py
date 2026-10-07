@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+
 
 class Severity(Enum):
     ERROR = "error"
@@ -25,4 +25,4 @@ class Diagnostic:
     col_end: int
     
     # Optional suggestion for auto-fix (e.g., unified diff string)
-    suggestion_diff: Optional[str] = None
+    suggestion_diff: str | None = None

@@ -1,5 +1,5 @@
-import pytest
 from mdfix.diagnostics import Diagnostic, Severity
+
 
 def test_diagnostic_creation():
     """
@@ -22,7 +22,6 @@ def test_diagnostic_creation():
     assert diag.file_path == "/path/to/file.md"
     assert diag.line_start == 10
     assert diag.col_start == 5
-    # Optional fields default to None or empty if not provided
     assert diag.suggestion_diff is None 
 
 def test_severity_enum_values():

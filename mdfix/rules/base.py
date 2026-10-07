@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import List
-from mdfix.document import Document
+
 from mdfix.diagnostics import Diagnostic
+from mdfix.document import Document
+
 
 class Rule(ABC):
     """
@@ -13,6 +14,5 @@ class Rule(ABC):
     description: str
 
     @abstractmethod
-    def check(self, document: Document) -> List[Diagnostic]:
+    def check(self, document: Document) -> list[Diagnostic]:
         """Analyze the document and return found issues."""
-        pass

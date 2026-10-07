@@ -1,8 +1,9 @@
-import pytest
 from pathlib import Path
+
+from mdfix.diagnostics import Diagnostic, Severity
 from mdfix.linter import Linter
 from mdfix.rules.base import Rule
-from mdfix.diagnostics import Diagnostic, Severity
+
 # parse_markdown імпортується всередині Linter, тут нам не потрібен для тесту правила
 
 class DummyRule(Rule):

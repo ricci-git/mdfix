@@ -1,8 +1,9 @@
-import pytest
 from pathlib import Path
-from mdfix.parser import parse_markdown
+
 from mdfix.elements import Paragraph
 from mdfix.inline_elements import Strong, Text
+from mdfix.parser import parse_markdown
+
 
 def test_paragraph_contains_inline_ast(tmp_path: Path):
     """

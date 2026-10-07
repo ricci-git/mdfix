@@ -6,10 +6,10 @@ DEFAULT_EXCLUDES = {
     ".git",
     ".venv",
     "node_modules",
-    ".pytest_cache",  # Ignore pytest cache directory
-    "__pycache__",    # Ignore Python bytecode cache directory
-    "build",          # Standard build artifacts
-    "dist"            # Standard distribution artifacts
+    ".pytest_cache",  # Fixed in M0
+    "__pycache__",    # Fixed in M0
+    "build",          # Fixed in M0
+    "dist"            # Fixed in M0
 }
 
 
@@ -18,8 +18,6 @@ def scan_markdown_files(
 ) -> list[MarkdownFile]:
     files = []
     
-    # Оптимізація: rglob повертає генератор, але ми збираємо в список
-    # Логіка фільтрації залишається тією ж, але тепер вона ловить нові директорії
     for path in root.rglob("*.md"):
         if any(
             part in DEFAULT_EXCLUDES

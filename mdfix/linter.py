@@ -1,20 +1,19 @@
 from pathlib import Path
-from typing import List
-from mdfix.rules.base import Rule
+
 from mdfix.diagnostics import Diagnostic
 from mdfix.parser import parse_markdown
-from mdfix.document import Document
+from mdfix.rules.base import Rule
 
 
 class Linter:
     """
     Orchestrates the execution of multiple rules against a Markdown file.
     """
-    def __init__(self, rules: List[Rule]):
+    def __init__(self, rules: list[Rule]):
         # Зберігаємо правила, але НЕ повертаємо нічого з __init__
         self.rules = rules
 
-    def lint(self, file_path: Path) -> List[Diagnostic]:
+    def lint(self, file_path: Path) -> list[Diagnostic]:
         """
         Parse the given file and run all registered rules.
         
@@ -29,13 +28,13 @@ class Linter:
         document = parse_markdown(file_path)
         
         # 2. Проганяємо всі правила через документ
-        all_diagnostics: List[Diagnostic] = []
+        all_diagnostics: list[Diagnostic] = []
         for rule in self.rules:
             try:
                 diags = rule.check(document)
                 all_diagnostics.extend(diags)
-            except Exception as e:
-                # Логування помилки конкретного правила, щоб не зупиняти весь процес
+            except Exception as e:  # noqa: BLE001
+            # Логування помилки конкретного правила, щоб не зупиняти весь процес
                 print(f"[LINTER ERROR] Rule {rule.id} failed: {e}")
                 
         return all_diagnostics
