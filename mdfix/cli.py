@@ -5,12 +5,11 @@ import typer
 
 from .diagnostics import Diagnostic
 
-from .patcher import apply_fixes
-
-
 # Нові імпорти для лінтингу
 from .linter import Linter
+from .patcher import apply_fixes
 from .rules.md001_heading_skip import Md001HeadingSkipRule
+from .rules.md009_trailing_whitespace import Md009TrailingWhitespaceRule
 from .scanner import scan_markdown_files
 
 # ВИПРАВЛЕННЯ ТУТ:
@@ -54,19 +53,20 @@ def scan(
 def run_lint_logic(target_path: Path) -> list[Diagnostic]:
     """
     Core logic for linting a single file or directory of markdown files.
-    Separated from CLI output for easier testing.
     """
-    rules = [Md001HeadingSkipRule()]
+    # ДОДАЄМО НОВІ ПРАВИЛА НИЩЕ
+    rules = [
+        Md001HeadingSkipRule(), 
+        Md009TrailingWhitespaceRule() 
+    ]
     linter = Linter(rules=rules)
     
     all_diagnostics: list[Diagnostic] = []
     
     if target_path.is_dir():
-        # Scan recursively
         markdown_files = scan_markdown_files(target_path)
         paths_to_check = [mf.path for mf in markdown_files]
     else:
-        # Single file
         paths_to_check = [target_path]
         
     for file_path in paths_to_check:
@@ -81,20 +81,14 @@ def run_lint_logic(target_path: Path) -> list[Diagnostic]:
 def run_fix_logic(target_path: Path, dry_run: bool = False) -> tuple[list[Path], dict[str, str]]:
     """
     Core logic for fixing markdown files.
-    
-    Args:
-        target_path: File or directory to fix.
-        dry_run: If True, calculates changes but does not write to disk.
-        
-    Returns:
-        A tuple containing:
-        - List of paths that WERE modified (or would be modified in dry-run).
-        - Dictionary mapping absolute path strings to their NEW content.
     """
-    rules = [Md001HeadingSkipRule()]
+    # ДОДАЄМО НОВІ ПРАВИЛА НИЩЕ
+    rules = [
+        Md001HeadingSkipRule(), 
+        Md009TrailingWhitespaceRule() 
+    ]
     linter = Linter(rules=rules)
     
-    all_diags: list[Diagnostic] = []
     files_to_process: list[Path] = []
     
     if target_path.is_dir():
@@ -111,13 +105,9 @@ def run_fix_logic(target_path: Path, dry_run: bool = False) -> tuple[list[Path],
         if not diags:
             continue
             
-        # Read original content
         original_content = file_path.read_text(encoding='utf-8')
-        
-        # Apply fixes
         fixed_content = apply_fixes(original_content, diags)
         
-        # Check if anything actually changed
         if fixed_content != original_content:
             abs_path_str = str(file_path.resolve())
             new_content_map[abs_path_str] = fixed_content
@@ -136,7 +126,7 @@ def fix(
 ):
     """Automatically fix common Markdown issues."""
     
-    changed_files, new_content_map = run_fix_logic(path, dry_run=dry_run)
+    changed_files, _ = run_fix_logic(path, dry_run=dry_run)
     
     if not changed_files:
         typer.echo(typer.style("No fixable issues found.", fg="green"))
@@ -146,18 +136,8 @@ def fix(
     typer.echo(typer.style(f"{action_word} {len(changed_files)} file(s):", fg="yellow"))
     
     for file_path in changed_files:
-        abs_path_str = str(file_path.resolve())
-        old_content = file_path.read_text(encoding='utf-8') # Re-read for diff display if needed, or store in map
-        new_content = new_content_map[abs_path_str]
-        
-        # Simple summary output
+        # Просто виводимо шлях до файлу
         typer.echo(f"- {file_path}")
-        
-        # Optional: Show unified diff here using difflib if desired for MVP
-        # import difflib
-        # diff = difflib.unified_diff(old_content.splitlines(), new_content.splitlines(), lineterm='')
-        # for line in diff:
-        #     typer.echo(line)
 
     if dry_run:
         typer.echo(typer.style("\n(DRY RUN: Files were NOT written to disk)", fg="cyan"))
