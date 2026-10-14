@@ -1,8 +1,8 @@
-from typing import List
+
 from mdfix.diagnostics import Diagnostic
 
 
-def apply_fixes(content: str, diagnostics: List[Diagnostic]) -> str:
+def apply_fixes(content: str, diagnostics: list[Diagnostic]) -> str:
     """
     Applies suggested fixes from diagnostics to the original content.
     
@@ -48,35 +48,56 @@ def apply_fixes(content: str, diagnostics: List[Diagnostic]) -> str:
         if start_idx < 0 or start_idx >= len(lines):
             continue
             
-        # For MVP, we assume single-line fixes mostly. 
-        # If multi-line, this simple logic might need expansion, but let's stick to single line replacement first.
-        if start_idx != end_idx:
-            # Skip multi-line ranges for now to avoid complexity bugs in MVP
-            continue
-
-        line_str = lines[start_idx]
-        
         # Adjust cols to 0-based indices
         c_start = max(0, diag.col_start - 1)
-        # col_end in Diagnostic is typically exclusive or inclusive depending on convention.
-        # In our test: "Some text." (len 10). col_start=1, col_end=11.
-        # So slice is [0:11]. But line_str has no \n here because we split by '\n'.
-        # Wait, if we split by '\n', "Some text." becomes just "Some text.". Length 10.
-        # Slice [0:11] would go out of bounds or take everything.
-        # Let's clamp c_end to length of line_str to be safe.
-        c_end = min(len(line_str), diag.col_end) 
+        c_end = min(len(lines[end_idx]), diag.col_end) 
         
-        # Extract prefix and suffix
-        prefix = line_str[:c_start]
-        suffix = line_str[c_end:]
-        
-        # Use suggestion as-is to allow inserting newlines (e.g., MD047)
         clean_suggestion = diag.suggestion_diff
         
-        # Reconstruct line
-        new_line = prefix + clean_suggestion + suffix
-        
-        lines[start_idx] = new_line
+        if start_idx == end_idx:
+            # Single line replacement logic (existing)
+            line_str = lines[start_idx]
+            prefix = line_str[:c_start]
+            suffix = line_str[c_end:]
+            new_line = prefix + clean_suggestion + suffix
+            lines[start_idx] = new_line
+        else:
+            # Multi-line replacement logic (NEW)
+            # We need to replace lines[start_idx : end_idx + 1] with new content derived from suggestion
+            
+            # 1. Get prefix from the first line involved
+            first_line_prefix = lines[start_idx][:c_start]
+            
+            # 2. Get suffix from the last line involved
+            last_line_suffix = lines[end_idx][c_end:]
+            
+            # 3. Split suggestion into lines
+            # Note: The suggestion might contain \n. 
+            # If it ends with \n, splitlines() will drop it, which is fine because we join with \n later.
+            suggestion_lines = clean_suggestion.split('\n')
+            
+            # 4. Construct the new block of lines
+            # The first new line gets the prefix from the original first line
+            # The last new line gets the suffix from the original last line
+            # Intermediate lines are just the suggestion parts
+            
+            new_block = []
+            
+            # Handle case where suggestion has only 1 line but replaces multiple
+            if len(suggestion_lines) == 1:
+                merged_line = first_line_prefix + suggestion_lines[0] + last_line_suffix
+                new_block.append(merged_line)
+            else:
+                # First line of suggestion merges with prefix
+                new_block.append(first_line_prefix + suggestion_lines[0])
+                
+                # Middle lines are added as-is using extend for efficiency
+                new_block.extend(suggestion_lines[1:-1])
+                    
+                # Last line of suggestion merges with suffix
+                new_block.append(suggestion_lines[-1] + last_line_suffix)
+            
+            # 5. Replace the old slice in 'lines' list with the new block
+            lines[start_idx : end_idx + 1] = new_block
 
-    # Join back with newlines
     return '\n'.join(lines)

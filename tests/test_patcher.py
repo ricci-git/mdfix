@@ -55,3 +55,29 @@ def test_apply_multiple_fixes_bottom_up_order():
     fixed_content = apply_fixes(original_content, [diag_1, diag_3])
     
     assert fixed_content == "Line 1 FIXED\nLine 2\nLine 3 FIXED"
+
+
+def test_apply_multi_line_replacement():
+    """
+    Verify that the patcher can replace a block of multiple lines with new content.
+    This is required for rules like MD055 (Table Formatting).
+    """
+    original_content = "Line 1\nLine 2 Bad\nLine 3 Also Bad\nLine 4 Good"
+    
+    # Simulate a diagnostic covering lines 2-3
+    diag = Diagnostic(
+        rule_id="TEST_MULTI",
+        severity=Severity.ERROR,
+        message="Replace block",
+        file_path="/fake/path.md",
+        line_start=2,
+        col_start=1,
+        line_end=3,
+        col_end=17, # End of "Line 3 Also Bad"
+        suggestion_diff="Line 2 Fixed\nLine 3 Fixed", # New multi-line content
+    )
+    
+    fixed_content = apply_fixes(original_content, [diag])
+    
+    expected = "Line 1\nLine 2 Fixed\nLine 3 Fixed\nLine 4 Good"
+    assert fixed_content == expected, f"Got:\n{repr(fixed_content)}\nExpected:\n{repr(expected)}"
