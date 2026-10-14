@@ -43,8 +43,8 @@ Related ADRs: ["DESIGN-001"]
 
 ## 1. Загальний стан
 
-**Версія:** v0.9.0-dev  
-**Статус:** Ядро діагностики та автофіксів реалізовано.  
+**Версія:** v0.9.0-dev
+**Статус:** Ядро діагностики та автофіксів реалізовано.
 
 Проєкт має повноцінний конвеєр обробки:
 
@@ -75,7 +75,7 @@ graph TD
     E --> F[Token Stream]
     F --> G(Recursive Inline Parser)
     G --> H[Inline AST]
-    
+
     style H fill:#f9f,stroke:#333,stroke-width:2px
     style D fill:#ccf,stroke:#333,stroke-width:2px
 ```
@@ -90,13 +90,13 @@ graph TD
 
 ## 3. Виконані віхи (History)
 
-| Версія | Назва | Основний результат |
-| ------ | ----- | ------------------ |
-| v0.7.0 | Inline AST Foundation | Моделі Text, Strong, Emphasis, Link, Code. Інтеграція в Paragraph. |
-| v0.7.1-v0.7.8 | Basic Inline Parsing | Послідовне додавання підтримки маркерів (`**`, `*`, ` `[]``()`), рефакторинг helper-функцій. |
-| v0.8.1 | Inline Tokenizer | Виділення лексичного шару. Токенізація без AST. |
-| v0.8.2 | Recursive Parsing | Перехід на рекурсивний парсер токенів. Підтримка глибокої вкладеності. |
-| v0.8.3 | Sequential Elements | Гарантія порядку слідування inline-елементів. Збереження тексту між ними. |
+| Версія        | Назва                 | Основний результат                                                                           |
+| ------------- | --------------------- | -------------------------------------------------------------------------------------------- |
+| v0.7.0        | Inline AST Foundation | Моделі Text, Strong, Emphasis, Link, Code. Інтеграція в Paragraph.                           |
+| v0.7.1-v0.7.8 | Basic Inline Parsing  | Послідовне додавання підтримки маркерів (`**`, `*`, ` `[]``()`), рефакторинг helper-функцій. |
+| v0.8.1        | Inline Tokenizer      | Виділення лексичного шару. Токенізація без AST.                                              |
+| v0.8.2        | Recursive Parsing     | Перехід на рекурсивний парсер токенів. Підтримка глибокої вкладеності.                       |
+| v0.8.3        | Sequential Elements   | Гарантія порядку слідування inline-елементів. Збереження тексту між ними.                    |
 
 ## 4. Дорожня карта (Roadmap)
 
@@ -162,8 +162,8 @@ The focus has currently shifted from functional parser development to stabilizin
 
 ## 1. General Status
 
-**Version:** v0.8.3  
-**Status:** Stable parsing prototype.  
+**Version:** v0.8.3
+**Status:** Stable parsing prototype.
 
 The project has a working Markdown parsing pipeline: from blocks to nested inline elements via a tokenizer. However, the system is not yet capable of diagnosing errors or automatically fixing documents (these are goals for Milestone 1+).
 
@@ -183,13 +183,13 @@ The project has a working Markdown parsing pipeline: from blocks to nested inlin
 
 ## 3. Completed Milestones (History)
 
-| Version | Name | Key Result |
-| ------- | ---- | ---------- |
-| v0.7.0 | Inline AST Foundation | Models for Text, Strong, Emphasis, Link, Code. Integration into Paragraph. |
-| v0.7.1-v0.7.8 | Basic Inline Parsing | Sequential addition of support for markers (`**`, `*`, ` `[]`,`()`), refactoring of helper functions. |
-| v0.8.1 | Inline Tokenizer | Extraction of the lexical layer. Tokenization without AST. |
-| v0.8.2 | Recursive Parsing | Transition to a recursive token parser. Support for deep nesting. |
-| v0.8.3 | Sequential Elements | Guarantee of inline element ordering. Preservation of text between them. |
+| Version       | Name                  | Key Result                                                                                            |
+| ------------- | --------------------- | ----------------------------------------------------------------------------------------------------- |
+| v0.7.0        | Inline AST Foundation | Models for Text, Strong, Emphasis, Link, Code. Integration into Paragraph.                            |
+| v0.7.1-v0.7.8 | Basic Inline Parsing  | Sequential addition of support for markers (`**`, `*`, ` `[]`,`()`), refactoring of helper functions. |
+| v0.8.1        | Inline Tokenizer      | Extraction of the lexical layer. Tokenization without AST.                                            |
+| v0.8.2        | Recursive Parsing     | Transition to a recursive token parser. Support for deep nesting.                                     |
+| v0.8.3        | Sequential Elements   | Guarantee of inline element ordering. Preservation of text between them.                              |
 
 ## 4. Roadmap
 
@@ -230,8 +230,8 @@ The project has a working Markdown parsing pipeline: from blocks to nested inlin
 ---
 **Version History:**
 
-| Version | Date       | Author      | Changes                                                                 |
-|---------|------------|-------------|-------------------------------------------------------------------------|
-| 2.1     | 2026-10-07 | Ricci/AI    | Added Milestone 0 priorities, standardized metadata, clarified roadmap. |
-| 2.0     | 2026-10-07 | Ricci       | Updated state for v0.8.3.                                               |
-| 1.0     | 2026-08-02 | Team        | Initial project state tracking.                                         |
+| Version | Date       | Author   | Changes                                                                 |
+| ------- | ---------- | -------- | ----------------------------------------------------------------------- |
+| 2.1     | 2026-10-07 | Ricci/AI | Added Milestone 0 priorities, standardized metadata, clarified roadmap. |
+| 2.0     | 2026-10-07 | Ricci    | Updated state for v0.8.3.                                               |
+| 1.0     | 2026-08-02 | Team     | Initial project state tracking.                                         |

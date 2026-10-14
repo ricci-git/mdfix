@@ -1,4 +1,3 @@
-
 from mdfix.diagnostics import Diagnostic
 
 
@@ -27,8 +26,6 @@ def apply_fixes(content: str, diagnostics: list[Diagnostic]) -> str:
         return content
         
     # Sort diagnostics by start position DESCENDING (Bottom-Up)
-    # Primary key: line_start (descending)
-    # Secondary key: col_start (descending)
     sorted_diags = sorted(
         fixable_diags, 
         key=lambda d: (d.line_start, d.col_start), 
@@ -36,7 +33,6 @@ def apply_fixes(content: str, diagnostics: list[Diagnostic]) -> str:
     )
     
     # Split into lines WITHOUT keeping newlines initially for easier manipulation
-    # Note: This assumes standard Unix-style line endings or handles them implicitly
     lines = content.split('\n')
     
     for diag in sorted_diags:
@@ -50,19 +46,24 @@ def apply_fixes(content: str, diagnostics: list[Diagnostic]) -> str:
             
         # Adjust cols to 0-based indices
         c_start = max(0, diag.col_start - 1)
+        
+        # Ensure end_idx is valid before accessing lines[end_idx]
+        if end_idx >= len(lines):
+            end_idx = len(lines) - 1
+            
         c_end = min(len(lines[end_idx]), diag.col_end) 
         
         clean_suggestion = diag.suggestion_diff
-        
+
         if start_idx == end_idx:
-            # Single line replacement logic (existing)
+            # Single line replacement logic
             line_str = lines[start_idx]
             prefix = line_str[:c_start]
             suffix = line_str[c_end:]
             new_line = prefix + clean_suggestion + suffix
             lines[start_idx] = new_line
         else:
-            # Multi-line replacement logic (NEW)
+            # Multi-line replacement logic
             # We need to replace lines[start_idx : end_idx + 1] with new content derived from suggestion
             
             # 1. Get prefix from the first line involved
@@ -72,15 +73,9 @@ def apply_fixes(content: str, diagnostics: list[Diagnostic]) -> str:
             last_line_suffix = lines[end_idx][c_end:]
             
             # 3. Split suggestion into lines
-            # Note: The suggestion might contain \n. 
-            # If it ends with \n, splitlines() will drop it, which is fine because we join with \n later.
             suggestion_lines = clean_suggestion.split('\n')
             
             # 4. Construct the new block of lines
-            # The first new line gets the prefix from the original first line
-            # The last new line gets the suffix from the original last line
-            # Intermediate lines are just the suggestion parts
-            
             new_block = []
             
             # Handle case where suggestion has only 1 line but replaces multiple

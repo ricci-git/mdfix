@@ -31,8 +31,8 @@ Related ADRs: ["DESIGN-001"]
 
 ### Поточний статус
 
-**Версія:** 0.8.3  
-**Статус:** Розробка ядра діагностики (Linting Core).  
+**Версія:** 0.8.3
+**Статус:** Розробка ядра діагностики (Linting Core).
 
 Реалізовано:
 
@@ -62,7 +62,7 @@ graph TD
     E --> F[Token Stream]
     F --> G(Recursive Inline Parser)
     G --> H[Inline AST]
-    
+
     style H fill:#f9f,stroke:#333,stroke-width:2px
     style D fill:#ccf,stroke:#333,stroke-width:2px
 ```
@@ -182,8 +182,8 @@ The project uses a structured document processing approach based on document mod
 
 ### Current Status
 
-**Version:** 0.8.3  
-**Status:** Developing Diagnostics Core (Linting Core).  
+**Version:** 0.8.3
+**Status:** Developing Diagnostics Core (Linting Core).
 
 Implemented:
 
@@ -288,7 +288,7 @@ MIT License
 ---
 **Version History:**
 
-| Version | Date | Author | Changes |
-| --- | --- | --- | --- |
-| 1.0.0 | 2026-10-07 | Ricci/AI | Major update to reflect v0.8.3 state, added Linter/Diagnostics info, standardized metadata, added EN translation. |
-| 0.7.0 | 2026-08-02 | Team | Initial public README. |
+| Version | Date       | Author   | Changes                                                                                                           |
+| ------- | ---------- | -------- | ----------------------------------------------------------------------------------------------------------------- |
+| 1.0.0   | 2026-10-07 | Ricci/AI | Major update to reflect v0.8.3 state, added Linter/Diagnostics info, standardized metadata, added EN translation. |
+| 0.7.0   | 2026-08-02 | Team     | Initial public README.                                                                                            |
