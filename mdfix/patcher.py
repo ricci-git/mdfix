@@ -70,8 +70,8 @@ def apply_fixes(content: str, diagnostics: List[Diagnostic]) -> str:
         prefix = line_str[:c_start]
         suffix = line_str[c_end:]
         
-        # Clean suggestion (remove potential trailing newlines if any slipped in)
-        clean_suggestion = diag.suggestion_diff.rstrip('\r\n')
+        # Use suggestion as-is to allow inserting newlines (e.g., MD047)
+        clean_suggestion = diag.suggestion_diff
         
         # Reconstruct line
         new_line = prefix + clean_suggestion + suffix

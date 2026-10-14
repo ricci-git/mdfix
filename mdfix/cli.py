@@ -10,6 +10,7 @@ from .linter import Linter
 from .patcher import apply_fixes
 from .rules.md001_heading_skip import Md001HeadingSkipRule
 from .rules.md009_trailing_whitespace import Md009TrailingWhitespaceRule
+from .rules.md047_newline_eof import Md047NewlineEofRule
 from .scanner import scan_markdown_files
 
 # ВИПРАВЛЕННЯ ТУТ:
@@ -57,7 +58,8 @@ def run_lint_logic(target_path: Path) -> list[Diagnostic]:
     # ДОДАЄМО НОВІ ПРАВИЛА НИЩЕ
     rules = [
         Md001HeadingSkipRule(), 
-        Md009TrailingWhitespaceRule() 
+        Md009TrailingWhitespaceRule(),
+        Md047NewlineEofRule()
     ]
     linter = Linter(rules=rules)
     
@@ -85,7 +87,8 @@ def run_fix_logic(target_path: Path, dry_run: bool = False) -> tuple[list[Path],
     # ДОДАЄМО НОВІ ПРАВИЛА НИЩЕ
     rules = [
         Md001HeadingSkipRule(), 
-        Md009TrailingWhitespaceRule() 
+        Md009TrailingWhitespaceRule(),
+        Md047NewlineEofRule()
     ]
     linter = Linter(rules=rules)
     
