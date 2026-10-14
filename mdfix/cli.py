@@ -8,9 +8,7 @@ from .diagnostics import Diagnostic
 # Нові імпорти для лінтингу
 from .linter import Linter
 from .patcher import apply_fixes
-from .rules.md001_heading_skip import Md001HeadingSkipRule
-from .rules.md009_trailing_whitespace import Md009TrailingWhitespaceRule
-from .rules.md047_newline_eof import Md047NewlineEofRule
+from .rules.registry import get_default_rules
 from .scanner import scan_markdown_files
 
 # ВИПРАВЛЕННЯ ТУТ:
@@ -55,12 +53,8 @@ def run_lint_logic(target_path: Path) -> list[Diagnostic]:
     """
     Core logic for linting a single file or directory of markdown files.
     """
-    # ДОДАЄМО НОВІ ПРАВИЛА НИЩЕ
-    rules = [
-        Md001HeadingSkipRule(), 
-        Md009TrailingWhitespaceRule(),
-        Md047NewlineEofRule()
-    ]
+    rules = get_default_rules()
+    
     linter = Linter(rules=rules)
     
     all_diagnostics: list[Diagnostic] = []
@@ -84,12 +78,8 @@ def run_fix_logic(target_path: Path, dry_run: bool = False) -> tuple[list[Path],
     """
     Core logic for fixing markdown files.
     """
-    # ДОДАЄМО НОВІ ПРАВИЛА НИЩЕ
-    rules = [
-        Md001HeadingSkipRule(), 
-        Md009TrailingWhitespaceRule(),
-        Md047NewlineEofRule()
-    ]
+    rules = get_default_rules()
+
     linter = Linter(rules=rules)
     
     files_to_process: list[Path] = []
