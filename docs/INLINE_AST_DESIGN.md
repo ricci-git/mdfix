@@ -17,9 +17,7 @@ Translations: en
 Created: 2026-08-02
 Last Updated: 2026-08-02
 
-Related Documents:
-
-* README.md
+Related Documents: README.md
 
 Related ADRs:
 
