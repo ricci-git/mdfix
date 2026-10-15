@@ -4,12 +4,13 @@ from typing import Annotated
 
 import typer
 
+from .config import load_config
 from .diagnostics import Diagnostic
 
 # Нові імпорти для лінтингу
 from .linter import Linter
 from .patcher import apply_fixes
-from .rules.registry import get_default_rules
+from .rules.registry import filter_rules, get_all_rules
 from .scanner import scan_markdown_files
 
 # ВИПРАВЛЕННЯ ТУТ:
@@ -51,12 +52,16 @@ def scan(
 # --- NEW LOGIC FOR LINTING ---
 
 def run_lint_logic(target_path: Path) -> list[Diagnostic]:
-    """
-    Core logic for linting a single file or directory of markdown files.
-    """
-    rules = get_default_rules()
+    # 1. Load config based on the target path's location
+    # If target is file, look in its dir. If dir, look in it.
+    search_base = target_path if target_path.is_dir() else target_path.parent
+    cfg = load_config(search_base)
     
-    linter = Linter(rules=rules)
+    # 2. Get all rules and filter them
+    all_rules = get_all_rules()
+    active_rules = filter_rules(all_rules, set(cfg.disable))
+    
+    linter = Linter(rules=active_rules)
     
     all_diagnostics: list[Diagnostic] = []
     
@@ -76,13 +81,16 @@ def run_lint_logic(target_path: Path) -> list[Diagnostic]:
 # --- NEW LOGIC FOR FIXING ---
 
 def run_fix_logic(target_path: Path, dry_run: bool = False) -> tuple[list[Path], dict[str, str]]:
-    """
-    Core logic for fixing markdown files.
-    """
-    rules = get_default_rules()
+    # 1. Load config based on the target path's location    
+    search_base = target_path if target_path.is_dir() else target_path.parent
+    cfg = load_config(search_base)
 
-    linter = Linter(rules=rules)
-    
+    # 2. Get all rules and filter them
+    all_rules = get_all_rules()
+    active_rules = filter_rules(all_rules, set(cfg.disable))
+
+    linter = Linter(rules=active_rules)
+
     files_to_process: list[Path] = []
     
     if target_path.is_dir():
