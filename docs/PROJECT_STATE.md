@@ -1,68 +1,44 @@
 ---
-Title: "Стан проєкту mdfix"
-Code: "PS-MDFIX-001"
-Version: "2.1"
-Status: "approved"
-Description: "Актуальний архітектурний стан, досягнуті результати, технічний борг та дорожня карта розвитку."
-Owner: "Ricci"
-Layer: "Application"
-Type: "Report"
+Title:  "Стан проєкту mdfix"
+Code:   "PS-MDFIX-001"
+Version: "3.0.0"
+Status:  "active"
+Description: "Актуальний архітектурний стан, досягнуті результати, технічний борг та поточна дорожня карта розвитку."
+Owner:  "Ricci"
+Layer:  "Application"
+Type:   "Report"
 Document Class: "Internal"
 Audience: "Developers, Maintainers"
 Canonical Language: uk
 Translations: en
 Created: 2026-08-02
-Last Updated: 2026-10-07
+Last Updated: 2026-10-15
 Reviewers: ["AI Assistant"]
 Approved By: ["Ricci"]
-Related Documents: ["proposal-2026-10-07.md", "INLINE_AST_DESIGN.md", "CHAT_HANDOVER.md"]
+Related Documents: ["README.md", "CHANGELOG.md", "docs/ROADMAP.md", "docs/BACKLOG.md", "docs/TASKS.md"]
 Related ADRs: ["DESIGN-001"]
 ---
 
 ## Стан проєкту mdfix
 
-## 0. Поточні пріоритети (Milestone 0: Repo Hygiene)
+## 1. Загальний статус
 
-На даний момент фокус зміщено з функціональної розробки парсера на стабілізацію інфраструктури репозиторію. Без цього подальший розвиток ризикований через неузгодженість метаданих та шум у результатах аналізу.
+**Версія:** v0.9.0  
+**Статус:** Стабільний MVP (Minimum Viable Product)  
+**Дата релізу:** 2026-10-15
 
-### 0.1 Технічний борг (To Do)
+Проєкт має повноцінний конвеєр обробки Markdown-документів: від сканування файлів до автоматичного виправлення помилок форматування. Система готова до використання у реальних проєктах та інтеграції в CI/CD пайплайни.
 
-1. **Синхронізація версій:** Версія в `pyproject.toml` (0.1.0) не відповідає `mdfix/version.py` (0.8.3). Необхідно налаштувати динамічне читання версії або синхронізувати вручну.
-2. **Виключення сканера:** `mdfix/scanner.py` включає `.pytest_cache` та `__pycache__` у результати пошуку. Необхідно додати ці директорії до `DEFAULT_EXCLUDES`.
-3. **Актуалізація README:** Файл `README.md` містить застарілу інформацію про кількість тестів та версію.
+### Ключові можливості v0.9.0
 
-### 0.2 Критерії завершення Milestone 0
+* **Лінтинг:** Виявлення порушень стандартів форматування (Markdownlint-compatible rules).
+* **Автофікс:** Безпечне виправлення знайдених помилок із підтримкою багаторядкових блоків (таблиці).
+* **Конфігурація:** Гнучке налаштування через `[tool.mdfix]` у `pyproject.toml`.
+* **Інструменти CLI:** Команди `lint`, `fix` (з `--dry-run` та Unified Diff), `scan`, `version`.
+* **Формати виводу:** Текст (для людини) та JSON (для машин/CI).
+* **Інфраструктура:** Автоматизований CI/CD pipeline на GitHub Actions.
 
-* Усі тести проходять (`pytest`).
-* Лінер проходить (`ruff check .`).
-* `mdfix scan .` не показує файлів з кеш-директорій.
-* Метадані пакета (`pip show mdfix`) відповідають версії CLI.
-* Документація (`PROJECT_STATE.md`, `README.md`) актуалізована.
-
----
-
-## 1. Загальний стан
-
-**Версія:** v0.9.0-dev
-**Статус:** Ядро діагностики та автофіксів реалізовано.
-
-Проєкт має повноцінний конвеєр обробки:
-
-1. **Scanner:** Пошук файлів.
-2. **Parser:** Побудова цілісного AST (Block + Inline).
-3. **Linter:** Аналіз AST правилами (`Rule.check()`), генерація `Diagnostic`.
-4. **Patcher:** Застосування виправлень (`suggestion_diff`) до тексту файлу.
-5. **CLI:** Інтерфейс команд `lint` (перевірка) та `fix` (виправлення з підтримкою `--dry-run`).
-
-**Ключові досягнення останнього циклу (Milestone 2):**
-
-* Реалізовано модуль `patcher.py` для безпечного внесення змін (bottom-up order).
-* Додано команду CLI `mdfix fix` з опцією `--dry-run`.
-* Написано перше правило з автофіксом: `MD009 Trailing Whitespace`.
-* Усі 146+ тестів проходять успішно.
-* Smoke-тест підтвердив коректну роботу пайплайну від виявлення помилки до запису виправленого файлу.
-
-## 2. Архітектурний обзор
+## 2. Архітектурний огляд
 
 ### 2.1 Конвеєр обробки (Pipeline)
 
@@ -70,69 +46,88 @@ Related ADRs: ["DESIGN-001"]
 graph TD
     A[Markdown File] --> B(Scanner)
     B --> C{Block Parser}
-    C --> D[Block AST]
-    D --> E(Inline Tokenizer)
-    E --> F[Token Stream]
-    F --> G(Recursive Inline Parser)
-    G --> H[Inline AST]
-
-    style H fill:#f9f,stroke:#333,stroke-width:2px
-    style D fill:#ccf,stroke:#333,stroke-width:2px
+    C --> D[Block AST + Inline AST]
+    D --> E(Linter Engine)
+    E --> F[List of Diagnostics]
+    F --> G(Patcher Engine)
+    G --> H[Fixed Content]
+    H --> I(File System / Console)
+    
+    style E fill:#f9f,stroke:#333,stroke-width:2px
+    style G fill:#ccf,stroke:#333,stroke-width:2px
 ```
 
-### 2.2 Компоненти
+### 2.2 Основні компоненти
 
-1. **Scanner**: Рекурсивний пошук `.md` файлів. *Проблема:* Потребує фільтрації технічних папок (Task 0.1.2).
-2. **Block Parser**: Розпізнає заголовки, абзаци, списки, таблиці, код-блоки. Генерує `Block AST`.
-3. **Inline Tokenizer**: Лексичний аналіз рядка всередині блоку. Повертає потік токенів. Відокремлений від побудови дерева.
-4. **Recursive Inline Parser**: Побудова `Inline AST` з потоку токенів. Підтримує вкладеність (`**bold *italic***`) та послідовність елементів.
-5. **Table Formatter**: Існує окремим модулем (`table_formatter.py`). Має базові тести, але **не інтегрований** у загальний ланцюжок обробки документу.
+| Компонент | Файл | Відповідальність | Статус |
+| :--- | :--- | :--- | :--- |
+| **Scanner** | `scanner.py` | Рекурсивний пошук `.md` файлів, фільтрація технічних директорій (`.git`, `__pycache__`). | ✅ Stable |
+| **Parser** | `parser.py`, `inline_parser.py` | Побудова Block AST та Inline AST. Підтримка вкладених елементів. | ✅ Stable |
+| **Linter** | `linter.py` | Рушій виконання правил. Приймає AST, повертає список `Diagnostic`. | ✅ Stable |
+| **Patcher** | `patcher.py` | Застосування виправлень (`suggestion_diff`) до сирого тексту. Bottom-up логіка для мультилайнів. | ✅ Stable |
+| **Registry** | `rules/registry.py` | Централізоване керування списком активних правил. Підтримка динамічної фільтрації (disable). | ✅ New in v0.9.0 |
+| **Config** | `config.py` | Читання налаштувань з `pyproject.toml`. | ✅ New in v0.9.0 |
+| **CLI** | `cli.py` | Інтерфейс командного рядка (Typer). Інтеграція всіх компонентів. | ✅ Stable |
 
-## 3. Виконані віхи (History)
+## 3. База правил (Rules Inventory)
 
-| Версія        | Назва                 | Основний результат                                                                           |
-| ------------- | --------------------- | -------------------------------------------------------------------------------------------- |
-| v0.7.0        | Inline AST Foundation | Моделі Text, Strong, Emphasis, Link, Code. Інтеграція в Paragraph.                           |
-| v0.7.1-v0.7.8 | Basic Inline Parsing  | Послідовне додавання підтримки маркерів (`**`, `*`, ` `[]``()`), рефакторинг helper-функцій. |
-| v0.8.1        | Inline Tokenizer      | Виділення лексичного шару. Токенізація без AST.                                              |
-| v0.8.2        | Recursive Parsing     | Перехід на рекурсивний парсер токенів. Підтримка глибокої вкладеності.                       |
-| v0.8.3        | Sequential Elements   | Гарантія порядку слідування inline-елементів. Збереження тексту між ними.                    |
+Наразі реалізовано та активовано за замовчуванням 6 правил, сумісних зі стандартом `markdownlint`:
 
-## 4. Дорожня карта (Roadmap)
+| ID | Назва | Опис | Автофікс | Складність реалізації |
+| :--- | :--- | :--- | :--- | :--- |
+| **MD001** | Heading Level Skip | Забороняє пропускати рівні заголовків (H1 -> H3). | ❌ Manual | Low |
+| **MD009** | Trailing Whitespace | Видаляє зайві пробіли/табуляції в кінці рядків. | ✅ Yes | Low |
+| **MD018** | Heading Space | Вимагає пробіл після хеша в ATX-заголовках (`#Title` -> `# Title`). | ✅ Yes | Low |
+| **MD030** | List Spacing | Вимагає пробіл після маркера списку (`-Item` -> `- Item`). | ✅ Yes | Low |
+| **MD047** | Newline at EOF | Гарантує наявність одного символу нового рядка в кінці файлу. | ✅ Yes | Low |
+| **MD055** | Table Format | Нормалізує форматування таблиць (вирівнювання колонок, розділювачі). | ✅ Yes | High (Multi-line) |
 
-### Milestone 0: Гігієна репозиторію (Поточний етап)
+*Детальний план розширення бази правил до ~20+ описаний у `docs/BACKLOG.md`.*
 
-* Синхронізація версій.
-* Фікс сканера.
-* Оновлення документації.
+## 4. Технічний борг та обмеження
 
-### Milestone 1: Ядро Діагностики (Linting Core)
+### 4.1 Обмеження парсингу
 
-* Модель `Diagnostic` (dataclass/pydantic).
-* Rule Engine (реєстр правил, visitor pattern).
-* Інтеграція Inline AST у Block Parser (щоб правила бачили структуру тексту).
-* Перші правила: MD001 (Heading Skip), MD009 (Trailing Whitespace).
-* CLI команда `mdfix lint`.
-
-### Milestone 2: Автофікси та Таблиці
-
-* Механізм генерації Diff/Patch.
-* Інтеграція `table_formatter` у процес фіксації.
-* Команда `mdfix fix --dry-run`.
-* Правило форматування таблиць.
-
-### Milestone 3: Стабілізація та Реліз MVP
-
-* E2E тести CLI.
-* Повна документація користувача (RULES.md).
-* CI/CD пайплайн.
-* Реліз v1.0.0-beta.
-
-## 5. Відомі обмеження (Known Limitations)
-
-* **Немає Linting:** Програма не може повідомити про помилки, тільки розібрати текст.
-* **Таблиці ізольовані:** Форматувальник таблиць не викликається автоматично при парсингу.
 * **Edge Cases:** Складні конструкції Markdown (footnotes, HTML-in-MD, complex escapes) можуть парситися некоректно або не підтримуватися поки що.
+* **Inline Depth:** Глибока вкладеність inline-елементів (наприклад, `**bold *italic* bold**`) підтримується базово, але може потребувати оптимізації для дуже великих документів.
+
+### 4.2 Продуктивність
+
+* **Sequential Processing:** Наразі файли обробляються послідовно. Для директорій з тисячами файлів це може бути повільно. Планується додавання паралельної обробки в Milestone 6.
+
+### 4.3 Тестове покриття
+
+* **Unit Tests:** Покриття ядра високе (>160 тестів).
+* **Integration Tests:** Покриття CLI команд хороше.
+* **Property-Based Testing:** Відсутнє. Планується додати для перевірки стабільності парсера на випадкових вхідних даних (Milestone 6+).
+
+## 5. Дорожня карта (Roadmap Summary)
+
+Повний стратегічний план описаний у `docs/ROADMAP.md`. Поточний фокус:
+
+* **✅ Milestone 0-4 (Завершено):** Ядро, автофікси, конфігурація, CI/CD, базові правила.
+* **🚀 Milestone 5 (In Progress):** Масштабування бази правил (Group A: Easy Wins). Ціль: v0.10.0-beta.
+* **🔮 Milestone 6 (Planned):** Оптимізація продуктивності, DX (редактори), Prettier-like форматування.
+* **🏁 Milestone 7 (Planned):** Реліз v1.0.0, PyPI publication.
+
+## 6. Інструкція для розробника
+
+### Локальний запуск
+
+```bash
+pip install -e ".[dev]"
+pytest -q          # Запуск усіх тестів
+ruff check .       # Перевірка стилю коду
+python -m mdfix lint docs/  # Літинг власної документації
+```
+
+### Додавання нового правила
+
+1. Створіть файл `mdfix/rules/mdXXX_name.py`.
+2. Реалізуйте клас, успадкований від `Rule`.
+3. Додайте тест у `tests/rules/test_mdXXX_name.py`.
+4. Зареєструйте правило у `mdfix/rules/registry.py` у функції `get_all_rules()`.
+5. Запустіть тести.
 
 ---
 
@@ -140,98 +135,106 @@ graph TD
 
 ## Project State of mdfix
 
-## 0. Current Priorities (Milestone 0: Repo Hygiene)
-
-The focus has currently shifted from functional parser development to stabilizing the repository infrastructure. Without this, further development is risky due to inconsistent metadata and noise in analysis results.
-
-### 0.1 Technical Debt (To Do)
-
-1. **Version Synchronization:** The version in `pyproject.toml` (0.1.0) does not match `mdfix/version.py` (0.8.3). Dynamic version reading or manual synchronization is required.
-2. **Scanner Exclusions:** `mdfix/scanner.py` includes `.pytest_cache` and `__pycache__` in search results. These directories must be added to `DEFAULT_EXCLUDES`.
-3. **README Update:** The `README.md` file contains outdated information regarding test counts and versions.
-
-### 0.2 Milestone 0 Completion Criteria
-
-* All tests pass (`pytest`).
-* Linter passes (`ruff check .`).
-* `mdfix scan .` does not show files from cache directories.
-* Package metadata (`pip show mdfix`) matches the CLI version.
-* Documentation (`PROJECT_STATE.md`, `README.md`) is updated.
-
----
-
 ## 1. General Status
 
-**Version:** v0.8.3
-**Status:** Stable parsing prototype.
+**Version:** v0.9.0  
+**Status:** Stable MVP (Minimum Viable Product)  
+**Release Date:** 2026-10-15
 
-The project has a working Markdown parsing pipeline: from blocks to nested inline elements via a tokenizer. However, the system is not yet capable of diagnosing errors or automatically fixing documents (these are goals for Milestone 1+).
+The project has a complete Markdown document processing pipeline: from file scanning to automatic formatting error fixing. The system is ready for use in real projects and integration into CI/CD pipelines.
+
+### Key Features v0.9.0
+
+* **Linting:** Detection of formatting standard violations (Markdownlint-compatible rules).
+* **Auto-fix:** Safe correction of found errors with support for multi-line blocks (tables).
+* **Configuration:** Flexible setup via `[tool.mdfix]` in `pyproject.toml`.
+* **CLI Tools:** Commands `lint`, `fix` (with `--dry-run` & Unified Diff), `scan`, `version`.
+* **Output Formats:** Text (for humans) and JSON (for machines/CI).
+* **Infrastructure:** Automated CI/CD pipeline on GitHub Actions.
 
 ## 2. Architectural Overview
 
-### 2.1 Processing Pipeline
-
 -*(Same diagram as above)*
 
-### 2.2 Components
+### 2.2 Main Components
 
-1. **Scanner**: Recursive search for `.md` files. *Issue:* Needs filtering of technical folders (Task 0.1.2).
-2. **Block Parser**: Recognizes headings, paragraphs, lists, tables, code blocks. Generates `Block AST`.
-3. **Inline Tokenizer**: Lexical analysis of the string inside a block. Returns a token stream. Separated from tree building.
-4. **Recursive Inline Parser**: Building `Inline AST` from the token stream. Supports nesting (`**bold *italic***`) and element sequence.
-5. **Table Formatter**: Exists as a separate module (`table_formatter.py`). Has basic tests but is **not integrated** into the general document processing chain.
+| Component | File | Responsibility | Status |
+| :--- | :--- | :--- | :--- |
+| **Scanner** | `scanner.py` | Recursive search for `.md` files, filtering technical directories. | ✅ Stable |
+| **Parser** | `parser.py`, `inline_parser.py` | Building Block AST and Inline AST. Supports nested elements. | ✅ Stable |
+| **Linter** | `linter.py` | Rule execution engine. Accepts AST, returns list of `Diagnostic`. | ✅ Stable |
+| **Patcher** | `patcher.py` | Applying fixes (`suggestion_diff`) to raw text. Bottom-up logic for multi-lines. | ✅ Stable |
+| **Registry** | `rules/registry.py` | Centralized management of active rules list. Dynamic filtering support. | ✅ New in v0.9.0 |
+| **Config** | `config.py` | Reading settings from `pyproject.toml`. | ✅ New in v0.9.0 |
+| **CLI** | `cli.py` | Command line interface (Typer). Integration of all components. | ✅ Stable |
 
-## 3. Completed Milestones (History)
+## 3. Rules Inventory
 
-| Version       | Name                  | Key Result                                                                                            |
-| ------------- | --------------------- | ----------------------------------------------------------------------------------------------------- |
-| v0.7.0        | Inline AST Foundation | Models for Text, Strong, Emphasis, Link, Code. Integration into Paragraph.                            |
-| v0.7.1-v0.7.8 | Basic Inline Parsing  | Sequential addition of support for markers (`**`, `*`, ` `[]`,`()`), refactoring of helper functions. |
-| v0.8.1        | Inline Tokenizer      | Extraction of the lexical layer. Tokenization without AST.                                            |
-| v0.8.2        | Recursive Parsing     | Transition to a recursive token parser. Support for deep nesting.                                     |
-| v0.8.3        | Sequential Elements   | Guarantee of inline element ordering. Preservation of text between them.                              |
+Currently implemented and enabled by default are 6 rules compatible with the `markdownlint` standard:
 
-## 4. Roadmap
+| ID | Name | Description | Auto-fix | Complexity |
+| :--- | :--- | :--- | :--- | :--- |
+| **MD001** | Heading Level Skip | Forbids skipping heading levels (H1 -> H3). | ❌ Manual | Low |
+| **MD009** | Trailing Whitespace | Removes extra spaces/tabs at end of lines. | ✅ Yes | Low |
+| **MD018** | Heading Space | Requires space after hash in ATX headings (`#Title` -> `# Title`). | ✅ Yes | Low |
+| **MD030** | List Spacing | Requires space after list marker (`-Item` -> `- Item`). | ✅ Yes | Low |
+| **MD047** | Newline at EOF | Guarantees presence of one newline character at end of file. | ✅ Yes | Low |
+| **MD055** | Table Format | Normalizes table formatting (column alignment, separators). | ✅ Yes | High (Multi-line) |
 
-### Milestone 0: Repository Hygiene (Current Stage)
+*Detailed plan for expanding rule base to ~20+ described in `docs/BACKLOG.md`.*
 
-* Version synchronization.
-* Scanner fix.
-* Documentation update.
+## 4. Technical Debt & Limitations
 
-### Milestone 1: Diagnostics Core (Linting Core)
+### 4.1 Parsing Limitations
 
-* `Diagnostic` model (dataclass/pydantic).
-* Rule Engine (rule registry, visitor pattern).
-* Integration of Inline AST into Block Parser (so rules can see text structure).
-* First rules: MD001 (Heading Skip), MD009 (Trailing Whitespace).
-* CLI command `mdfix lint`.
-
-### Milestone 2: Auto-fixes & Tables
-
-* Diff/Patch generation mechanism.
-* Integration of `table_formatter` into the fixing process.
-* Command `mdfix fix --dry-run`.
-* Table formatting rule.
-
-### Milestone 3: Stabilization & MVP Release
-
-* E2E CLI tests.
-* Full user documentation (RULES.md).
-* CI/CD pipeline.
-* Release v1.0.0-beta.
-
-## 5. Known Limitations
-
-* **No Linting:** The program cannot report errors, only parse text.
-* **Isolated Tables:** The table formatter is not called automatically during parsing.
 * **Edge Cases:** Complex Markdown constructs (footnotes, HTML-in-MD, complex escapes) may be parsed incorrectly or unsupported for now.
+* **Inline Depth:** Deep nesting of inline elements is supported basically but may require optimization for very large documents.
+
+### 4.2 Performance
+
+* **Sequential Processing:** Currently files are processed sequentially. For directories with thousands of files this can be slow. Parallel processing planned for Milestone 6.
+
+### 4.3 Test Coverage
+
+* **Unit Tests:** Core coverage is high (>160 tests).
+* **Integration Tests:** Good CLI command coverage.
+* **Property-Based Testing:** Missing. Planned to add for parser stability verification on random input data (Milestone 6+).
+
+## 5. Roadmap Summary
+
+Full strategic plan described in `docs/ROADMAP.md`. Current focus:
+
+* **✅ Milestone 0-4 (Done):** Core, auto-fixes, configuration, CI/CD, basic rules.
+* **🚀 Milestone 5 (In Progress):** Scaling rule base (Group A: Easy Wins). Target: v0.10.0-beta.
+* **🔮 Milestone 6 (Planned):** Performance optimization, DX (editors), Prettier-like formatting.
+* **🏁 Milestone 7 (Planned):** Release v1.0.0, PyPI publication.
+
+## 6. Developer Instructions
+
+### Local Run
+
+```bash
+pip install -e ".[dev]"
+pytest -q          # Run all tests
+ruff check .       # Check code style
+python -m mdfix lint docs/  # Lint own documentation
+```
+
+### Adding a New Rule
+
+1. Create file `mdfix/rules/mdXXX_name.py`.
+2. Implement class inheriting from `Rule`.
+3. Add test in `tests/rules/test_mdXXX_name.py`.
+4. Register rule in `mdfix/rules/registry.py` in function `get_all_rules()`.
+5. Run tests.
 
 ---
-**Version History:**
 
-| Version | Date       | Author   | Changes                                                                 |
-| ------- | ---------- | -------- | ----------------------------------------------------------------------- |
-| 2.1     | 2026-10-07 | Ricci/AI | Added Milestone 0 priorities, standardized metadata, clarified roadmap. |
-| 2.0     | 2026-10-07 | Ricci    | Updated state for v0.8.3.                                               |
-| 1.0     | 2026-08-02 | Team     | Initial project state tracking.                                         |
+### Version History
+
+| Version | Date       | Author      | Changes                                                                 |
+| ------- | ---------- | ----------- | ----------------------------------------------------------------------- |
+| 3.0.0   | 2026-10-15 | Ricci/AI    | Major update to reflect v0.9.0 state. Added Registry/Config details, updated rules list, clarified architecture, added EN translation sync. Removed obsolete Milestone 0 references. |
+| 2.1     | 2026-10-07 | Ricci/AI    | Added Milestone 0 priorities, standardized metadata, clarified roadmap. |
+| 2.0     | 2026-10-07 | Ricci       | Updated state for v0.8.3.                                               |
+| 1.0     | 2026-08-02 | Team        | Initial project state tracking.                                         |
