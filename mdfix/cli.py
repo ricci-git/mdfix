@@ -1,4 +1,5 @@
 import difflib
+import json
 from pathlib import Path
 from typing import Annotated
 
@@ -191,21 +192,42 @@ def fix(
 @app.command()
 def lint(
     path: Annotated[Path, typer.Argument(help="File or directory to lint")] = DEFAULT_SCAN_PATH,
+    fmt: Annotated[str, typer.Option("--format", help="Output format: text or json")] = "text",
 ):
     """Analyze Markdown files for common issues."""
     
     diagnostics = run_lint_logic(path)
     
+    if fmt.lower() == "json":
+        # Convert Diagnostic objects to dictionaries for JSON serialization
+        output_data = [
+            {
+                "rule_id": d.rule_id,
+                "severity": d.severity.value,
+                "message": d.message,
+                "file_path": d.file_path,
+                "line_start": d.line_start,
+                "col_start": d.col_start,
+                "line_end": d.line_end,
+                "col_end": d.col_end,
+            }
+            for d in diagnostics
+        ]
+        print(json.dumps(output_data, indent=2))
+        
+        # Exit code logic remains same: 0 if empty, 1 if issues found
+        raise typer.Exit(code=0 if not diagnostics else 1)
+    
+    # Default text output logic (existing code below)
     if not diagnostics:
         typer.echo(typer.style("No issues found.", fg="green"))
         raise typer.Exit(code=0)
-    
+        
     typer.echo(typer.style(f"Found {len(diagnostics)} issue(s):", fg="red"))
     
     for diag in diagnostics:
         location = f"{diag.file_path}:{diag.line_start}:{diag.col_start}"
         severity_color = "yellow" if diag.severity.value == "warning" else "red"
-        
         message = (
             f"{typer.style(location, fg='blue')} "
             f"[{typer.style(diag.rule_id, fg=severity_color)}] "
@@ -213,7 +235,6 @@ def lint(
         )
         typer.echo(message)
         
-    # Exit with non-zero code if errors/warnings found (standard for CI/CD tools)
     raise typer.Exit(code=1)
 
 
