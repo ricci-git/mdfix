@@ -1,3 +1,4 @@
+import difflib
 from pathlib import Path
 from typing import Annotated
 
@@ -119,7 +120,8 @@ def fix(
 ):
     """Automatically fix common Markdown issues."""
     
-    changed_files, _ = run_fix_logic(path, dry_run=dry_run)
+    # Отримуємо список змінених файлів та їх НОВИЙ контент
+    changed_files, new_content_map = run_fix_logic(path, dry_run=dry_run)
     
     if not changed_files:
         typer.echo(typer.style("No fixable issues found.", fg="green"))
@@ -129,11 +131,51 @@ def fix(
     typer.echo(typer.style(f"{action_word} {len(changed_files)} file(s):", fg="yellow"))
     
     for file_path in changed_files:
-        # Просто виводимо шлях до файлу
-        typer.echo(f"- {file_path}")
+        abs_path_str = str(file_path.resolve())
+        new_content = new_content_map.get(abs_path_str)
+        
+        if new_content is None:
+            continue
+            
+        # Читаємо ОРИГІНАЛЬНИЙ контент з диска для порівняння
+        # (У dry-run режимі файл не був змінений, тому читаємо стару версію)
+        try:
+            original_content = file_path.read_text(encoding='utf-8')
+        except FileNotFoundError:
+            # Файл міг бути видалений паралельно, пропускаємо
+            continue
+            
+        # Генеруємо Unified Diff
+        original_lines = original_content.splitlines(keepends=True)
+        new_lines = new_content.splitlines(keepends=True)
+        
+        diff = difflib.unified_diff(
+            original_lines, 
+            new_lines, 
+            fromfile=f"a/{file_path.name}", 
+            tofile=f"b/{file_path.name}",
+            lineterm="" # Щоб уникнути зайвих переносів у самому diff об'єкті
+        )
+        
+        # Виводимо шлях до файлу жирним/кольоровим
+        typer.echo("")
+        typer.echo(typer.style(f"--- {file_path} ---", fg="cyan", bold=True))
+        
+        # Виводимо сам diff рядок за рядком
+        # Колоруємо '+', '-', '@@' для кращої читабельності
+        for line in diff:
+            if line.startswith("+"):
+                typer.echo(typer.style(line, fg="green"))
+            elif line.startswith("-"):
+                typer.echo(typer.style(line, fg="red"))
+            elif line.startswith("@@"):
+                typer.echo(typer.style(line, fg="blue"))
+            else:
+                typer.echo(line)
 
     if dry_run:
-        typer.echo(typer.style("\n(DRY RUN: Files were NOT written to disk)", fg="cyan"))
+        typer.echo("")
+        typer.echo(typer.style("(DRY RUN: Files were NOT written to disk)", fg="yellow", bold=True))
         
     raise typer.Exit(code=0)
 
