@@ -1,8 +1,8 @@
 from pathlib import Path
-import pytest
+
+from mdfix.diagnostics import Severity
 from mdfix.linter import Linter
 from mdfix.rules.md047_newline_eof import Md047NewlineEofRule
-from mdfix.diagnostics import Severity
 
 
 def test_md047_detects_missing_newline(tmp_path: Path):

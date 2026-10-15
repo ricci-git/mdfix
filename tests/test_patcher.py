@@ -1,6 +1,6 @@
-from pathlib import Path
-from mdfix.patcher import apply_fixes
 from mdfix.diagnostics import Diagnostic, Severity
+from mdfix.patcher import apply_fixes
+
 
 def test_apply_single_line_replacement():
     """
@@ -80,4 +80,4 @@ def test_apply_multi_line_replacement():
     fixed_content = apply_fixes(original_content, [diag])
     
     expected = "Line 1\nLine 2 Fixed\nLine 3 Fixed\nLine 4 Good"
-    assert fixed_content == expected, f"Got:\n{repr(fixed_content)}\nExpected:\n{repr(expected)}"
+    assert fixed_content == expected, f"Got:\n{fixed_content!r}\nExpected:\n{expected!r}"

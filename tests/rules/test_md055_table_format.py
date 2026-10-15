@@ -1,8 +1,8 @@
 from pathlib import Path
-import pytest
+
+from mdfix.diagnostics import Severity
 from mdfix.linter import Linter
 from mdfix.rules.md055_table_format import Md055TableFormatRule
-from mdfix.diagnostics import Severity
 
 
 def test_md055_detects_misaligned_table(tmp_path: Path):

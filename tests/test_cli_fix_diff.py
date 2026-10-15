@@ -1,6 +1,7 @@
 from pathlib import Path
-import pytest
+
 from typer.testing import CliRunner
+
 from mdfix.cli import app
 
 runner = CliRunner()

@@ -1,8 +1,8 @@
 from pathlib import Path
-import pytest
+
+from mdfix.diagnostics import Severity
 from mdfix.linter import Linter
 from mdfix.rules.md009_trailing_whitespace import Md009TrailingWhitespaceRule
-from mdfix.diagnostics import Severity
 
 
 def test_md009_detects_trailing_spaces(tmp_path: Path):
